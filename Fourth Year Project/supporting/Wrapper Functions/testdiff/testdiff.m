@@ -1,0 +1,14 @@
+%%Chris Mullen 10387763
+
+%% This Function is used to test the difference of two images
+%% this is to verify that two images have nothing in common with each other 
+%% if the average difference per pixel is zero, this means they are exactly the same image
+
+function testdiff
+	a=imread('frames/Before.png');
+	b=imread('frames/After.png');
+	c=a-b;
+	difference=sum(sum(abs(a-b)))/prod(size(a));
+	printf('average pixel difference is: %d\n',difference);
+	imwrite(c,'diff.png');
+	end

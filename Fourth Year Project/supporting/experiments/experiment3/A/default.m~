@@ -1,0 +1,22 @@
+%% Chris Mullen 2013-2014
+%% Experiment 3A
+
+%% This program's function is to call err.m with whatever user inputs are required, err.m was designed to be as
+%% as flexible as possible so it's purpose varies. each experiment will have one of these default.m files which
+%% determines err.m's purpose
+%% See report for full experiment details
+function default
+%%Orig
+%err(mkblock='a',back='r',block='r',blocksize=64,backdim=5,erramount=0,startpos=15,pxshift=100,mkvid=true,lossless=true,play=true,framesout=true,correlation=true,drawfigs=true);
+
+%%2A
+%err(mkblock='a',back='r',block='r',blocksize=64,backdim=5,erramount='n',startpos=1,pxshift=0,mkvid=true,lossless=true,play=true,framesout=false,correlation=false,drawfigs=false);
+%%2B
+%err(mkblock='a',back='r',block='r',blocksize=64,backdim=5,erramount='n',startpos=1,pxshift=2,mkvid=true,lossless=true,play=true,framesout=false,correlation=false,drawfigs=false);
+
+%%3A
+%err(mkblock='a',back='z',block='r',blocksize=64,backdim=5,erramount=0,startpos=1,pxshift=8,mkvid=true,lossless=true,play=true,framesout=true,correlation=false,drawfigs=false);
+err(mkblock='a',back='z',block='r',blocksize=64,backdim=3,erramount=2048,startpos=1,pxshift=32,mkvid=true,lossless=true,play=true,framesout=true,correlation=false,drawfigs=true);
+%%3B
+%err(mkblock='a',back='r',block='r',blocksize=64,backdim=5,erramount=0,startpos=1,pxshift=8,mkvid=true,lossless=true,play=true,framesout=true,correlation=false,drawfigs=false);
+	end

@@ -1,0 +1,4 @@
+%this function removes the "tmp" directory and everything in it (if it exists) and creates a new one
+function tmpdir
+	system("rm -rf tmp; mkdir tmp");
+	end

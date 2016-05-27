@@ -1,0 +1,607 @@
+%% Chris Mullen 2013-2014
+%% Experiments 2 and 3
+
+%% This program generates two images and compresses them to video, their makeup is dependant entirely on input
+%% parameters. This was designed with flexibility in mind, so it's purpose depends on the default.m file calling
+%% it. (each experiment will have different input parameters). 
+%% See default.m for more information
+function err(mkblock='n',back='r',block='r',blocksize=64,backdim='s',erramount=0,startpos=64,pxshift=2,
+mkvid=true,lossless=true,play=true,framesout=false,correlation=false,drawfigs=false)
+%%err('a','r','r',64,'s',0,64,2,true,false,true,false,false,false)	%% mkblock='a' means create all new blocks of data, should only be used for first use so that all blocks, 
+	%% 	while random will be consistant for subsequent tests. the following will have no affect if mkblock='n': 
+	%% 	"blocksize", "erramount". mkblock='e' means create new error block ONLY
+	%% back='r' means each frame's background will be matrix of random values.
+	%%	(each frame will be computed separately so they are different),'z' means all zeros,'o' means all ones
+	%% block='r' has the same function as "back" only it applies to the data blocks we are testing, 
+	%%	same parameters as "back": 'r','z','o'
+	%% blocksize=8 means 8*8 block size, (8*8)*(8*8) background size
+	%% backdim is the dimension of the background, if an integer x, it will be (x(blocksize),x(blocksize))
+	%%	if 's' (for squared) it will be ((blocksize*blocksize),(blocksize*blocksize))	
+	%% erramount=1 means amount of error, (number of pixels to change in the test case). erramount can also be 'n',for new block (equivalent to erramount=adderror(blocksize*blocksize)
+	%% startpos=2 means that the block's starting position will be (2,2)
+	%% pxshift=1 means to shift the pixel blocks +1 in both the x and y directions
+	%% mkvid=true means to create an mp4 with the frames
+	%% lossless=true means the lossless x264 format will be used when encoding frames
+	%% play=true means to play the mp4 files when they are created(used for viewing results)
+	%% drawfigs=true means another set of frames will be written, with a border around each noise block, 
+	%% 	to make them easier to track and record results (startpos must be greater than 2, to allow the borders
+	%% 	to be drawn, also the pxshift should enforce the same constraint pxshift<=backdim*blocksize-2)
+	%% framesout=false means to not decompress the frames from the resulting mp4 video files, this is used
+	%%	to test the recording quality of ffmpeg, an absolute pixel difference of zero means that the frame was 
+	%%	recorded perfectly
+	%% xcorr=false means the cross correlation between the blocks and the final product will not be checked.
+	%%	(additional images are created if drawfigs=true)
+ 
+	system("rm -rf files");%%remove previous frames
+	if(ischar(backdim))
+		if(backdim=='s')
+			backdim=blocksize;
+		else
+			printf("back dim must be an integer or 's' for squared");
+			return;
+			endif
+		endif
+	if(startpos<1||startpos>blocksize*backdim-blocksize-1)
+		printf("startpos > 0, and < blocksize*blocksize-blocksize-1\n");
+		maximum1=blocksize*backdim-blocksize-1;
+		printf("For blocksize = %d, maximum startpos is: %d \n",blocksize,maximum1);
+		return;
+		end
+	if(pxshift!='r')
+		if(pxshift>blocksize*backdim-blocksize-startpos+1)
+			printf("pxshift too large\n\n");
+			maximum2=blocksize*backdim-blocksize-startpos;
+			printf("For blocksize = %d, maximum pixelshift is: %d (with startpos = %d) \n",blocksize,maximum2,startpos);
+			return;
+			end
+		end
+	if(drawfigs==true)
+		system("rm -rf files/figure;");
+		if(startpos<=2)
+			printf("if drawfigs=true, startpos must be >2 to allow for the 2-pixel border to be drawn\n");
+			if((ans=input("press \'y\' to set startpos to 3, anything else to exit\n","s"))=="y")
+				startpos=3;
+			else
+				return;
+				endif
+			endif
+		endif
+	if(mkblock=='a')
+		printf("are you sure you want to recalculate all blocks?, all data will be deleted\n");
+		if((ans=input("press \'y\' to set continue, anything else to exit\n","s"))=="y")
+			mkblocks(erramount,blocksize,startpos,pxshift,correlation,drawfigs,back,block,backdim);
+		else
+			return;
+			endif
+	elseif(mkblock=='e')
+		printf("Using Old Frames, Except New \"Error Block\" Being Created\n");
+		load block_orig.mat;
+		load background1.mat;%%Chris Mullen 2013-2014 Edit- two random backgrounds created to prevent motion estimation between the two
+		load background2.mat;
+		block_new=adderror(erramount,block_orig);
+		save block_new.mat block_new;
+		mkframes(background1,background2,startpos,pxshift,block_orig,block_new,correlation,drawfigs);
+	elseif(mkblock=='n')
+		printf("Using Old Frames\n");
+		load block_new.mat;
+		load block_orig.mat;
+		load background1.mat;%%Chris Mullen 2013-2014 Edit- two random backgrounds created to prevent motion estimation between the two
+		load background2.mat;
+		mkframes(background1,background2,startpos,pxshift,block_orig,block_new,correlation,drawfigs);
+	else
+		printf("mkblock must be 'a','e' or 'n'");
+		end
+	if(mkvid==true)
+		mpg(lossless);
+		end
+	if(framesout==true)
+		frames_out;%%decompress mpeg into it's individual frames
+		end
+	if(play==true)
+		playvid;
+		end
+	dispfilesize;%%display video file sizes
+	end
+
+%%Chris Mullen 2013-2014
+function mkblocks(erramount,blocksize,startpos,pxshift,correlation,drawfigs,back,block,backdim)
+	system("rm -rf files");
+	system("mkdir files;");
+	if(back=='r')
+		background1=rand(blocksize*backdim,blocksize*backdim);%%%%Chris Mullen 2013-2014 Edit- two random backgrounds created to prevent motion estimation between the two
+		background2=rand(blocksize*backdim,blocksize*backdim);
+	elseif(back=='o')
+		background1=ones(blocksize*backdim,blocksize*backdim);%%%%Chris Mullen 2013-2014 Edit- two random backgrounds created to prevent motion estimation between the two
+		background2=ones(blocksize*backdim,blocksize*backdim);
+	elseif(back=='z')
+		background1=zeros(blocksize*backdim,blocksize*backdim);%%%%Chris Mullen 2013-2014 Edit- two random backgrounds created to prevent motion estimation between the two
+		background2=zeros(blocksize*backdim,blocksize*backdim);
+	else
+		printf("back must be 'r','o' or 'z'\n");
+		return;
+		endif
+	save background1.mat background1;
+	save background2.mat background2;
+	if(block=='r')
+		block_orig=rand(blocksize,blocksize);
+	elseif(block=='o')
+		block_orig=ones(blocksize,blocksize);
+	elseif(block=='z')
+		block_orig=zeros(blocksize,blocksize);
+	else
+		printf("block must be 'r','o' or 'z'\n");
+		return;
+		endif
+	if(erramount=='n')
+		block_new=adderror(blocksize*blocksize,block_orig);
+	elseif(isinteger(int64(erramount)))%%number constants in octave are double precision floating point values, so this is the quickest way i found to check if it is a number
+		block_new=adderror(erramount,block_orig);
+	else
+		printf("erramount must be an integer or 'n' for new block");
+		endif
+	save block_orig.mat block_orig;
+	save block_new.mat block_new;
+	mkframes(background1,background2,startpos,pxshift,block_orig,block_new,correlation,drawfigs);
+	end
+
+%%Chris Mullen 2013-2014
+function block=adderror(erramount,block)
+	if(erramount==0)
+		return
+	elseif(erramount>rows(block)*rows(block))
+		printf("erramount too large, greater than the number of pixels, set to %d\n",rows(block)*rows(block));
+		endif
+	filled=rand(rows(block),columns(block));%%edit(contains random values to introduce errors to data block instead of ones)
+	processed=zeros(rows(block),columns(block));%stores either 0 or 1, to mark whether it has been changed or not, to prevent the same pixel being changed twice
+	for count1=1:erramount
+		for count2=1:rows(block)*columns(block)
+			a=randi(rows(block));
+			b=randi(columns(block));
+			if(processed(a,b)==0)%%check if this pixel has been changed
+				block(a,b)=filled(a,b);
+				processed(a,b)=1;
+				break;
+			elseif(processed(a,b)==1)
+				%%Do nothing, i.e loop again to find an unused spot
+			else
+				printf("processed pixels array out of bounds\n");
+				endif
+			endfor
+		endfor
+	imwrite(block,"newblock.png");
+	return 
+	end
+
+%%Chris Mullen 2013-2014
+function mkframes(background1,background2,startpos,pxshift,block_orig,block_new,correlation,drawfigs)
+	if(pxshift=='r')
+		mkrandframes(background1,background2,block_orig,block_new,drawfigs,correlation);
+		return
+		endif
+	system("mkdir files; mkdir files/frames; mkdir files/frames/control; mkdir files/frames/test");
+	blocksize=rows(block_orig);
+	%%frame1(control)
+	frame1a=background1;%%frame1 random background
+	frame1a(startpos:startpos+blocksize-1,startpos:startpos+blocksize-1)=block_orig;
+	
+	%%frame2(control)
+	frame1b=background2;%%frame2 random background
+	frame1b(startpos+pxshift:startpos+blocksize-1+pxshift,startpos+pxshift:startpos+blocksize-1+pxshift)=block_orig;
+	
+
+	%%frame1(test)
+	frame2a=background1;%%frame1 random background
+	frame2a(startpos:startpos+blocksize-1,startpos:startpos+blocksize-1)=block_orig;
+	
+	%%frame2(test)
+	frame2b=background2;%%frame2 random background
+	frame2b(startpos+pxshift:startpos+blocksize-1+pxshift,startpos+pxshift:startpos+blocksize-1+pxshift)=block_new;
+	
+	
+imwrite(frame1a,"files/frames/control/frame1.png");
+imwrite(frame1b,"files/frames/control/frame2.png");
+imwrite(frame2a,"files/frames/test/frame1.png");
+imwrite(frame2b,"files/frames/test/frame2.png");
+
+	blockrows=rows(block_orig);
+	blockcols=columns(block_orig);
+
+	if(pxshift==0)
+		swapblock(frame2b,{startpos,startpos},{startpos,startpos},blockrows,blockcols);
+	else
+		swapblock(frame2b,{pxshift,pxshift},{startpos,startpos},blockrows,blockcols);
+		end
+	if(correlation==true)
+		testcorr(block_orig,block_new,frame1a,frame1b,frame2a,frame2b,startpos,startpos,drawfigs);
+		endif
+
+	%%Draw Figure does the above, only prints another set of frames with a border around the noise blocks, to make them easier to see against the noise background
+	if(drawfigs==true)
+		system("mkdir files/figure; mkdir files/figure/control; mkdir files/figure/test;");
+
+		%%frame1(control)
+		frame=background1;%%frame1 random background
+		frame(startpos-2:startpos+blocksize+1,startpos-2:startpos+blocksize+1)=zeros;%%used to draw a border around the blocks to make them more visible
+		frame(startpos:startpos+blocksize-1,startpos:startpos+blocksize-1)=block_orig;
+		imwrite(frame,"files/figure/control/frame1.png");
+
+		%%frame2(control)
+		frame=background2;%%frame2 random background
+		frame(startpos+pxshift-2:startpos+blocksize+1+pxshift,startpos+pxshift-2:startpos+blocksize+1+pxshift)=zeros;%%used to draw a border around the blocks to make them more visible
+		frame(startpos+pxshift:startpos+blocksize-1+pxshift,startpos+pxshift:startpos+blocksize-1+pxshift)=block_orig;
+		imwrite(frame,"files/figure/control/frame2.png");
+
+		%%frame1(test)
+		frame=background1;%%frame1 random background
+		frame(startpos-2:startpos+blocksize+1,startpos-2:startpos+blocksize+1)=zeros;%%used to draw a border around the blocks to make them more visible
+		frame(startpos:startpos+blocksize-1,startpos:startpos+blocksize-1)=block_orig;
+		imwrite(frame,"files/figure/test/frame1.png");
+
+		%%frame2(test)
+		frame=background2;%%frame2 random background
+		frame(startpos+pxshift-2:startpos+blocksize+1+pxshift,startpos+pxshift-2:startpos+blocksize+1+pxshift)=zeros;%%used to draw a border around the blocks to make them more visible
+		frame(startpos+pxshift:startpos+blocksize-1+pxshift,startpos+pxshift:startpos+blocksize-1+pxshift)=block_new;
+		imwrite(frame,"files/figure/test/frame2.png");
+	
+		playfig;
+		endif
+	end
+
+%%Chris Mullen 2013-2014
+function mkrandframes(background1,background2,block_orig,block_new,drawfigs,correlation)
+	system("mkdir files; mkdir files/frames; mkdir files/frames/control; mkdir files/frames/test");
+	backsize=rows(background1);
+	blocksize=rows(block_orig);
+	if(drawfigs==true)
+		x1=randi(backsize-2-blocksize);%% -2 to allow for exaggerated points to be drawn at the edges
+		y1=randi(backsize-2-blocksize);
+	else
+		x1=randi(backsize-blocksize);
+		y1=randi(backsize-blocksize);
+		endif
+
+	frame1a=background1;
+	frame2a=background1;
+
+	frame1a(x1:x1+blocksize-1,y1:y1+blocksize-1)=block_orig;
+	frame2a(x1:x1+blocksize-1,y1:y1+blocksize-1)=block_orig;
+
+	x2=randi(backsize-blocksize);%%random x coordinate
+	y2=randi(backsize-blocksize);%%random y coordinate
+
+	frame1b=background2;
+	frame2b=background2;
+
+	frame1b(x2:x2+blocksize-1,y2:y2+blocksize-1)=block_orig;
+	frame2b(x2:x2+blocksize-1,y2:y2+blocksize-1)=block_new;
+
+	imwrite(frame1a,"files/frames/control/frame1.png");
+	imwrite(frame1b,"files/frames/control/frame2.png");
+	imwrite(frame2a,"files/frames/test/frame1.png");
+	imwrite(frame2b,"files/frames/test/frame2.png");
+
+	if(correlation==true)
+		testcorr(block_orig,block_new,frame1a,frame1b,frame2a,frame2b,x1,y1,drawfigs);
+		endif
+	end
+
+%%Chris Mullen 2013-2014
+
+%%%%FRAMES DROPPED HERE
+function mpg(lossless=false)
+	system("rm -rf mpg-out; mkdir mpg-out; mkdir mpg-out/motion_estimation; mkdir mpg-out/no_motion_estimation;");
+	%%Lossless
+	if(lossless==true)
+		%%motion_estimation
+		system("ffmpeg -f image2 -i files/frames/control/frame%d.png -c:v libx264 -preset veryslow -crf 0 -me_method tesa -loglevel verbose mpg-out/motion_estimation/control.mp4");
+		system("ffmpeg -f image2 -i files/frames/test/frame%d.png -c:v libx264 -preset veryslow -crf 0 -me_method tesa -loglevel verbose mpg-out/motion_estimation/test.mp4");
+		%%no_motion_estimation
+		system("ffmpeg -f image2 -i files/frames/control/frame%d.png -c:v libx264 -preset veryslow -crf 0 -g 0 -loglevel verbose mpg-out/no_motion_estimation/control.mp4");
+		system("ffmpeg -f image2 -i files/frames/test/frame%d.png -c:v libx264 -preset veryslow -crf 0 -g 0 -loglevel verbose mpg-out/no_motion_estimation/test.mp4");
+	%%Not lossless
+	else
+		%%motion_estimation
+		system("ffmpeg -f image2 -i files/frames/control/frame%d.png -me_method tesa -loglevel verbose mpg-out/motion_estimation/control.mp4");
+		system("ffmpeg -f image2 -i files/frames/test/frame%d.png -me_method tesa -loglevel verbose mpg-out/motion_estimation/test.mp4");
+		%%no_motion_estimation
+		system("ffmpeg -f image2 -i files/frames/control/frame%d.png -g 0 -loglevel verbose mpg-out/no_motion_estimation/control.mp4");
+		system("ffmpeg -f image2 -i files/frames/test/frame%d.png -g 0 -loglevel verbose mpg-out/no_motion_estimation/test.mp4");
+		end
+	end
+
+%%Chris Mullen 2013-2014
+function frames_out
+	system("rm -rf frames-out");
+	system("mkdir frames-out; mkdir frames-out/control; mkdir frames-out/control/motion_estimation; mkdir frames-out/control/no_motion_estimation; mkdir frames-out/test; mkdir frames-out/test/motion_estimation; mkdir frames-out/test/no_motion_estimation;");
+	system("mkdir frames-out/control/tmp; mkdir frames-out/test/tmp");
+	%%controls
+	system("ffmpeg -i mpg-out/motion_estimation/control.mp4 -loglevel verbose frames-out/control/motion_estimation/frame%d.png");
+	system("ffmpeg -i mpg-out/no_motion_estimation/control.mp4 -loglevel verbose frames-out/control/no_motion_estimation/frame%d.png");
+	%%tests
+	system("ffmpeg -i mpg-out/motion_estimation/test.mp4 -loglevel verbose frames-out/test/motion_estimation/frame%d.png");
+	system("ffmpeg -i mpg-out/no_motion_estimation/test.mp4 -loglevel verbose frames-out/test/no_motion_estimation/frame%d.png");
+	difference;
+	end
+
+%%Chris Mullen 2013-2014
+function difference
+	%%input frames
+	control1_in=imread('files/frames/control/frame1.png');
+	control2_in=imread('files/frames/control/frame2.png');
+	test1_in=imread('files/frames/test/frame1.png');
+	test2_in=imread('files/frames/test/frame2.png');
+	%%output frames
+	control1_out=imread('frames-out/control/motion_estimation/frame1.png');
+	control2_out=imread('frames-out/control/motion_estimation/frame2.png');
+	test1_out=imread('frames-out/test/motion_estimation/frame1.png');
+	test2_out=imread('frames-out/test/motion_estimation/frame2.png');
+	%%difference between each corresponding frame (input-output)
+	control1_dif=sum(sum(abs(control1_in-control1_out)))/prod(size(control1_in));
+	control2_dif=sum(sum(abs(control2_in-control2_out)))/prod(size(control2_in));
+	test1_dif=sum(sum(abs(test1_in-test1_out)))/prod(size(test1_in));
+	test2_dif=sum(sum(abs(test2_in-test2_out)))/prod(size(test2_in));
+	%%display results
+	printf("\naverage difference per pixel (in/out):\n\n");
+	printf("control1: %d\n",control1_dif);
+	printf("control2: %d\n",control2_dif);
+	printf("test1: %d\n",test1_dif);
+	printf("test2: %d\n\n",test2_dif);
+	end
+
+%%Chris Mullen 2013-2014
+function reprocess
+	system("rm -rf frames/reprocessed; mkdir frames/reprocessed; mkdir frames/reprocessed/control; mkdir frames/reprocessed/test")
+	for count = 1:2
+		a=imread(sprintf('frames-out/control/tmp/frame%d.png',count));
+		b=imread(sprintf('frames-out/test/tmp/frame%d.png',count));
+		c=imread(sprintf('files/frames/control/frame%d.png',count));%%Original frames
+		d=imread(sprintf('files/frames/test/frame%d.png',count));%%Original frames
+	    imwrite(a,sprintf('frames-out/control/frame%d.png',count),8);
+		imwrite(b,sprintf('frames-out/test/frame%d.png',count),8);
+		imwrite(c,sprintf('frames/reprocessed/control/frame%d.png',count),8);
+		imwrite(d,sprintf('frames/reprocessed/test/frame%d.png',count),8);
+	    endfor
+	system("rm -rf frames-out/control/tmp");
+	system("rm -rf frames-out/test/tmp");
+	end
+
+%%Chris Mullen 2013-2014
+function playvid
+	system("ffplay -x 400 -y 400 -window_title 'CONTROL(motion estimation enabled)' -i mpg-out/motion_estimation/control.mp4 -loop 0");
+	system("ffplay -x 400 -y 400 -window_title 'TEST CASE(motion estimation enabled)' -i mpg-out/motion_estimation/test.mp4 -loop 0")
+	system("ffplay -x 400 -y 400 -window_title 'CONTROL(motion estimation disabled)' -i mpg-out/no_motion_estimation/control.mp4 -loop 0");
+	system("ffplay -x 400 -y 400 -window_title 'TEST CASE(motion estimation disabled)' -i mpg-out/no_motion_estimation/test.mp4 -loop 0");
+	end
+%%Chris Mullen 2013-2014
+function playfig
+	system("ffplay -i maxcor/figure/max1.png");
+	system("ffplay -i maxcor/figure/max2.png");
+	system("ffplay -i files/figure/control/frame1.png");
+	system("ffplay -i files/figure/control/frame2.png");
+	system("ffplay -i files/figure/test/frame1.png");
+	system("ffplay -i files/figure/test/frame2.png");
+	system("ffplay -i combined/frame1a.png");
+	system("ffplay -i combined/frame1b.png");
+	system("ffplay -i combined/frame2a.png");
+	system("ffplay -i combined/frame2b.png");
+	end
+
+%%Chris Mullen 2013-2014
+function testcorr(block_orig,block_new,frame1a,frame1b,frame2a,frame2b,x0,y0,drawfigs)
+	backsize=rows(frame1a);
+	%%Cross-Correlation
+	%%original block
+	correlation1=(xcorr2(block_orig,frame1a,"coeff"));
+	correlation2=(xcorr2(block_orig,frame1b,"coeff"));
+	correlation3=(xcorr2(block_orig,frame2a,"coeff"));
+	correlation4=(xcorr2(block_orig,frame2b,"coeff"));
+	%%new block (error added)
+	correlation5=(xcorr2(block_new,frame1a,"coeff"));
+	correlation6=(xcorr2(block_new,frame1b,"coeff"));
+	correlation7=(xcorr2(block_new,frame2a,"coeff"));
+	correlation8=(xcorr2(block_new,frame2b,"coeff"));
+
+	%%Max Values in cross-correlation
+	%%original block
+	%%[x0 y0]=initial location (parameter list)
+
+	[x1 y1]=findmax(correlation1);
+	x1=backsize-x1+1;
+	y1=backsize-y1+1;
+	[x2 y2]=findmax(correlation2);
+	x2=backsize-x2+1;
+	y2=backsize-y2+1;
+	[x3 y3]=findmax(correlation3);
+	x3=backsize-x3+1;
+	y3=backsize-y3+1;
+	[x4 y4]=findmax(correlation4);
+	x4=backsize-x4+1;
+	y4=backsize-y4+1;
+	[x5 y5]=findmax(correlation5);
+	x5=backsize-x5+1;
+	y5=backsize-y5+1;
+	[x6 y6]=findmax(correlation6);
+	x6=backsize-x6+1;
+	y6=backsize-y6+1;
+	[x7 y7]=findmax(correlation7);
+	x7=backsize-x7+1;
+	y7=backsize-y7+1;
+	[x8 y8]=findmax(correlation8);
+	x8=backsize-x8+1;
+	y8=backsize-y8+1;
+
+	%%Prep for wrapper function
+	blockrows=rows(block_orig);
+	blockcols=columns(block_orig);
+	%%Frame 1 - Block Doesn't move
+	ip={x1,x1};
+	dp={x1,y1};
+	wrapper(frame1a,"frame1a",ip,dp,blockrows,blockcols);
+
+	ip={x2,y2};%%Initial Point(position of block after shift)
+	dp={x1,y1};%%Destination Point(original point, before shift)
+
+	%%move block back to it's original position
+	wrapper(frame2a,"frame2a",ip,dp,blockrows,blockcols);
+	
+	if(drawfigs==true)
+		system("rm -rf combined;");
+		system("mkdir combined");
+		im=frame1a;
+		im(x1-2:x1+2,y1-2:y1+2)=1;
+		imwrite(im,"combined/frame1a.png");
+		im=frame1b;
+		im(x2-2:x2+2,y2-2:y2+2)=1;
+		imwrite(im,"combined/frame1b.png");
+		im=frame2a;
+		im(x3-2:x3+2,y3-2:y3+2)=1;
+		imwrite(im,"combined/frame2a.png");
+		im=frame2b;
+		im(x4-2:x4+2,y4-2:y4+2)=1;
+		imwrite(im,"combined/frame2b.png");
+		endif
+
+	A=[x1,y1;x2,y2;x3,y3;x4,y4;x5,y5;x6,y6;x7,y7;x8,x8];
+	%A=[x1,y1;x2,y2;x3,y3;0,0;x5,y5;x6,y6;x7,y7;0,0;];
+	save vectortable.mat A;
+	
+	blocksize=rows(block_orig);
+	backsize=rows(frame1a);
+	
+	max1=zeros(backsize,backsize);
+	max2=zeros(backsize,backsize);
+	max3=zeros(backsize,backsize);
+	max4=zeros(backsize,backsize);
+	max5=zeros(backsize,backsize);
+	max6=zeros(backsize,backsize);
+	max7=zeros(backsize,backsize);
+	max8=zeros(backsize,backsize);
+	
+	%max1(backsize-x1,backsize-y1)=1;
+	%max2(backsize-x2,backsize-y2)=1;
+	%max3(backsize-x3,backsize-y3)=1;
+	%max4(backsize-x4,backsize-y4)=1;
+	%max5(backsize-x5,backsize-y5)=1;
+	%max6(backsize-x6,backsize-y6)=1;
+	%max7(backsize-x7,backsize-y7)=1;
+	%max8(backsize-x8,backsize-y8)=1;
+	
+	max1(x1,y1)=1;
+	max2(x2,y2)=1;
+	max3(x3,y3)=1;
+	max4(x4,y4)=1;
+	max5(x5,y5)=1;
+	max6(x6,y6)=1;
+	max7(x7,y7)=1;
+	max8(x8,y8)=1;
+	
+	system("rm -rf maxcor");
+	system("mkdir maxcor");	
+	imwrite(max1,"maxcor/max1.png");
+	imwrite(max2,"maxcor/max2.png");
+	imwrite(max3,"maxcor/max3.png");
+	imwrite(max4,"maxcor/max4.png");
+	imwrite(max5,"maxcor/max5.png");
+	imwrite(max6,"maxcor/max6.png");
+	imwrite(max7,"maxcor/max7.png");
+	imwrite(max8,"maxcor/max8.png");
+	
+	if(drawfigs==true)
+		max1(x1-2:x1+2,y1-2:y1+2)=1;
+		max2(x2-2:x2+2,y2-2:y2+2)=1;
+		max3(x3-2:x3+2,y3-2:y3+2)=1;
+		max4(x4-2:x4+2,y4-2:y4+2)=1;
+		max5(x5-2:x5+2,y5-2:y5+2)=1;
+		max6(x6-2:x6+2,y6-2:y6+2)=1;
+		max7(x7-2:x7+2,y7-2:y7+2)=1;
+		max8(x8-2:x8+2,y8-2:y8+2)=1;
+
+		%system("rm -rf maxcor/figure;");
+		system("mkdir maxcor/figure;");
+		imwrite(max1,"maxcor/figure/max1.png");
+		imwrite(max2,"maxcor/figure/max2.png");
+		imwrite(max3,"maxcor/figure/max3.png");
+		imwrite(max4,"maxcor/figure/max4.png");
+		imwrite(max5,"maxcor/figure/max5.png");
+		imwrite(max6,"maxcor/figure/max6.png");
+		imwrite(max7,"maxcor/figure/max7.png");
+		imwrite(max8,"maxcor/figure/max8.png");
+	else
+		printf("warning: either correlation or drawfigs == false");
+		endif
+
+	%%display max values
+	%printf("max value locations, X Y\n\n");
+
+	printf("block_orig with frame1a [%d %d]\n",x1,y1);
+	printf("block_orig with frame1b [%d %d]\n",x2,y2);
+	printf("block_orig with frame2a [%d %d]\n",x3,y3);
+	printf("block_orig with frame2b [%d %d]\n\n",x4,y4);
+
+	printf("block_new with frame1a [%d %d]\n",x5,y5);
+	printf("block_new with frame1b [%d %d]\n",x6,y6);
+	printf("block_new with frame2a [%d %d]\n",x7,y7);
+	printf("block_new with frame2b [%d %d]\n\n",x8,y8);
+
+	system("rm -rf dif; mkdir dif");
+	imwrite(block_orig,"dif/orig.png");
+	imwrite(block_new,"dif/new.png");
+	%difference(block_orig,block_new);
+	end
+
+%%Chris Mullen 2013-2014
+function qa=quantize(a,num)
+	a=a./max(max(a));
+    qa=round(a*num);
+	end
+
+%%Chris Mullen 2013-2014
+function [x y]=findmax(im)
+	[maxval]=max(im(:));
+	[x y]=ind2sub(size(im),find(im==maxval));
+	end
+
+%%Chris Mullen 2013-2014
+function dispfilesize
+	if(exist("mpg-out","dir")!=false)%%exist returns a number of values, depending on filetype. 0 if it doesn't exist
+		system("echo '\nfilesizes: motion_estimation:'");%%prints message to screen, with the result, printf displays the message much earlier
+		system("ls mpg-out/motion_estimation -la");
+		system("echo '\nfilesizes: no motion_estimation:\n'");
+		system("ls mpg-out/no_motion_estimation -la");
+	else
+		printf("Cannot Display Video Size, Video Does Not Exist. Make Sure mkvid=true\n");
+		endif
+	end
+
+%%Chris Mullen 2013-2014
+function swapblock(frame,p1,p2,blockrows,blockcols)
+	%%Initial Block Location
+	blk1=frame(p1{1}:p1{1}+blockrows,p1{2}:p1{2}+blockcols);
+	%imwrite(blk1,"blk1.png");
+	%%Target Block Location
+	blk2=frame(p2{1}:p2{1}+blockrows,p2{2}:p2{2}+blockcols);
+	%imwrite(blk2,"blk2.png");
+
+	frame(p2{1}:p2{1}+blockrows,p2{2}:p2{2}+blockcols)=blk1;
+	frame(p1{1}:p1{1}+blockrows,p1{2}:p1{2}+blockcols)=blk2;
+	%imwrite(frame,"frame.png");
+
+	%frame(p1{1}:p1{1}+blockrows-1,p1{2}:p1{2}+blockcols-1)=tmpframe(p2{1}:p2{1}+blockrows-1,p2{2}:p2{2}+blockcols-1);
+	%frame(p2{1}:p2{1}+blockrows-1,p2{2}:p2{2}+blockcols-1)=tmpframe(p1{1}:p1{1}+blockrows-1,p1{2}:p1{2}+blockcols-1);
+	end
+
+%%Chris Mullen 2013-2014
+function wrapper(frame,fname,ip,dp,blockrows,blockcols)
+	system("rm -rf wrapper_frames");
+	system("mkdir wrapper_frames");
+	if(ip{1}!=dp{1}&&ip{2}!=dp{2})
+		tmpframe=frame;
+		frame(ip{1}:ip{1}+blockrows-1,ip{2}:ip{2}+blockcols-1)=rot90(rot90(tmpframe(dp{1}:dp{1}+blockrows-1,dp{2}:dp{2}+blockcols-1)));%%this block is rotated 180 degrees to prevent overwriting data with some repeated blocks, this error occurred with overlapping blocks
+		frame(dp{1}:dp{1}+blockrows-1,dp{2}:dp{2}+blockcols-1)=tmpframe(ip{1}:ip{1}+blockrows-1,ip{2}:ip{2}+blockcols-1);
+		cd wrapper_frames;
+		save ip.mat ip;
+		save dp.mat dp;
+		cd ../
+		endif
+	imwrite(frame,["wrapper_frames/" fname ".png"]);
+	end

@@ -1,0 +1,24 @@
+function pad=pad(matrix)	
+    numrows=rows(matrix);
+    numcols=columns(matrix);%length of transpose gives the number of colums
+    if(numrows!=numcols)
+        if(numrows>numcols)
+            pad=zeros(numrows);
+	    for rowcount=1:numrows
+	        for colcount=1:numcols
+	    	    pad(rowcount,colcount)=pad(rowcount,colcount)+matrix(rowcount,colcount);
+		    end
+		end
+	    else
+	        pad=zeros(numcols);
+		for colcount=1:numcols
+		    for rowcount=1:numrows
+			pad(rowcount,colcount)=pad(rowcount,colcount)+matrix(rowcount,colcount);
+			end
+		    end
+		end
+	else
+	    pad=matrix;
+	    end
+	return;
+	end

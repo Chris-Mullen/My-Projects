@@ -1,0 +1,56 @@
+%% This function takes in two frames, divides one into macroblocks, then cross-correlates each macroblock
+%% with the other frame to detect redundancies
+
+function findblk(frame1,frame2)
+	divide(frame2,16);
+	correlate(frame1);
+	end
+
+%%Chris Mullen 10387763
+function divide(frame,blksize)
+	system("rm -rf blocks; mkdir blocks;");
+	[x,y] = size(frame);
+	xt=roundup(x,blksize);%%round up to nearest blksize
+	yt=roundup(y,blksize);
+	tmpframe=zeros(xt,yt);
+	tmpframe(1:x,1:y)=frame;
+	frame=tmpframe;
+	for a = 1:blksize:x
+    	for b = 1:blksize:y
+			blk{a,b} = frame(a:(a+blksize-1), b:(b+blksize-1));
+			imwrite(blk{a,b},sprintf('blocks/block%d:%d,%d:%d.png',a,a+blksize-1,b,b+blksize-1));
+			endfor
+		endfor
+	system("rm -rf tmp; mkdir tmp");
+	cd tmp;
+	save blkarray.mat blk;
+	cd ../
+	end
+
+%%Chris Mullen 10387763
+function a=roundup(a,b)
+	while(mod(a,b)!=0)
+		a++;
+		end
+	end
+
+%%Chris Mullen 10387763
+function correlate(frame)
+	system("rm -rf correlated; mkdir correlated");
+	cd tmp;
+	load blkarray.mat blk;
+	cd ../
+	[x,y] = size(frame);
+	blksize=rows(blk{1,1});
+	for a = 1:blksize:x
+    	for b = 1:blksize:y
+			tmpblk=blk{a,b};
+			temp=xcorr2(tmpblk,frame,"coeff");
+			if(max(temp(:))>0)
+				disp(max(temp(:)));
+				imwrite(blk{a(:),b(:)},sprintf('correlated/block%d:%d,%d:%d.png',a,a+blksize-1,b,b+blksize-1));
+				endif
+			endfor
+		endfor
+	end
+

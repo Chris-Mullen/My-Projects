@@ -1,0 +1,6 @@
+function compress
+	frame1=imread("frames/frame1.png");
+	frame2=imread("frames/frame2.png");
+	system("ffmpeg -f image2 -i frames/frame%d.png -c:v libx264 -preset veryslow -crf 0 -me_method tesa -loglevel verbose compressed.mp4");
+	system("ffplay -i compressed.mp4");
+	end

@@ -1,0 +1,20 @@
+function mpg
+	tmpdir;
+	system("rm -rf mpg-out; mkdir mpg-out");
+	%system("ffmpeg -f image2 -i tmp/frame%d.jpg -me_method zero mpg-out/test1.mp4");%zero motion estimation
+	system("ffmpeg -f image2 -i frames/frame%d.png -me_method epzs -b 0 mpg-out/test1.mp4");%default
+
+	%system("ffmpeg -f image2 -i frames/frame%d.jpg -dia_size 515  mpg-out/test1.mp4");
+	system("ffmpeg -i mpg-out/test1.mp4 -bf 9 frames-out/frame%d.jpg");
+	end
+
+function tmpdir
+	if(exist("tmp","dir"))
+	else
+		mkdir("tmp");
+		end
+	if(exist("frames-out","dir"))
+	else
+		mkdir("frames-out");
+		end
+	end
