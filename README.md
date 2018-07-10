@@ -8,9 +8,9 @@ Will most likely use Qt for the user interface.
 *Technologies Used: C++, SDL_Mixer, UNIX*
 
 
-**PyScales - 2018**
+**PythonScales - 2018**
 
-PyScales is a simple application for synthesizing sine waves according to a particular musical scale; Written in python and using the UNIX SoX Application.
+PythonScales is a simple application for synthesizing sine waves according to a particular musical scale; Written in python and using the UNIX SoX Application.
 It's generic purpose is for practicing musicians to play a given scale or set of scales at a particular tempo. A Chord can be played in the background to give context to the scale e.g. When playing through the seven modes of the Major Scale.
 This Project began as a precursor to RhythmSection above and its functionality will most likely be integrated instead of developed further.
 
