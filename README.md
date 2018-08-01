@@ -2,10 +2,9 @@
 
 **RhythmSection - 2018**
 
-RhythmSection is an application for generating and playing complex, realistic drum grooves, Started as a simple metronome and now expanded to a fully functioning drum machine, Note: No UI exists as of yet as this is a work in progress. runs in UNIX terminal for now but will be cross platform in the future.
-Will most likely use Qt for the user interface.
+RhythmSection is an application for generating and playing complex, realistic drum and bass grooves, Started as a simple metronome and now expanded to a versatile Backing-Track Generator. Currently Supporting Linux Systems, with scope to expand to Windows and Mac OS
 
-Recommended Usage ( For Demo ): ./DrumLooper.out 100
+Recommended Usage: ./RhythmSection.out 90 4.4 A1
 
 *Technologies Used: C++, SDL_Mixer, UNIX*
 
