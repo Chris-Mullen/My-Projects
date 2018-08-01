@@ -1,103 +1,159 @@
-#include "Drum_Looper.h"
+#include "RhythmSection.h"
 
-//Static
-int Instrument::channelCount = 1;
+using namespace std;
+
+int Instrument::getChannelCount(){ return Channels.size(); }
+int Instrument::getRhythmPatternCount(){ return rhythms.size(); }
+void Instrument::addRhythm( string rhythmPattern ){ rhythms.push_back( rhythmPattern ); }
+void Instrument::setScales( vector< Scale * > s ){ scales = s; }
+void Instrument::playWAV( Mix_Chunk * wav, int channelNo ){ Mix_PlayChannelTimed( channelNo, wav, 0, sustain ); }
+
+//Sets Volume To A Percentage Of Maximum Volume
+void Instrument::setVolume( int v ){
+
+	for( int i : ChannelNumbers ){
+
+		Mix_Volume( i, MIX_MAX_VOLUME / ( 100 / v ) );
+
+	}
+
+}
+
+void Instrument::nextRhythmPattern(){
+
+	if( randomizeRyhthms ){
+
+		currentRhythm = ( rand() % getRhythmPatternCount() );
+
+	}
+
+	else{
+
+		currentRhythm = ( ++currentRhythm ) % getRhythmPatternCount();
+
+	}
+
+}
+
+void Instrument::addChannel( const char * const c ){
+
+	int thisChannel = Beat::getNextChannel();
+
+	ChannelNumbers.push_back( thisChannel );
+
+	Channels.push_back( Mix_LoadWAV( c ) );
+
+}
+
+void Instrument::playChannel( int channelNo ){
+
+	if( ( channelNo + 1 ) > Channels.size() ){
+
+		cout << "Channel Not Defined: " << channelNo << endl;
+		cout << "Channels: " << Channels.size() << endl;
+
+		return;
+
+	}
+
+	playWAV( Channels.at( channelNo ), channelNo );
+
+}
 
 void Instrument::printInfo(){
 
-  cout << "\t\t" << DIVIDER3 << endl;
+  cout << "\r\t\t" << DIVIDER3 << endl;
   cout << "\t\t" << "\"" << instrumentName << "\"" << endl;
-  cout << "\t\tChannel:\t" << channelNo << endl;
-  cout << "\t\tRhythm:\t\t" << rhythmPattern << endl;
-  cout << "\t\tPrimary Addr:\t" << SOUND1 << endl;
-  cout << "\t\tSecondary Addr:\t" << SOUND2 << endl;
+	cout << "\r\t\t" << DIVIDER3 << endl;
+
+	if( rhythms.size() > 0 ){
+
+		cout << "\t\tRhythms:\t";
+
+		for( string tmpRhythm : rhythms ){
+
+				cout << tmpRhythm << endl << "\t\t\t\t";
+
+		}
+
+	}
+
+	else{
+
+		cout << "\t\tRhythms:\t[ NONE ]" << endl << "\t\t";
+
+		beatInstance -> addWarningMessage( instrumentName + ": No Rhythms Added." );
+
+	}
+
+	int channelCount = getChannelCount();
+
+	if( channelCount > 0 ){
+
+		cout << "\r\t\tChannels:";
+
+		for( int i = 0; i < channelCount; i++ ){
+
+			cout << "\t" << ChannelNumbers.at( i ) << ": " << Channels.at( i ) << "\t[ " << ChannelNumbers[ i ] << " ]" << endl << "\r\t\t\t";
+
+		}
+
+	}
+
+	else{
+
+		cout << "\r\t\tChannels:\t[ NONE ]" << endl;
+
+		beatInstance -> addWarningMessage( instrumentName + ": No Channels Added." );
+
+	}
+
+	if( scales.size() > 0 ){
+
+		cout << "\r\t\tScales( " << scales.size() << " ):" << endl;
+
+		printScalesInfo();
+
+	}
+
+	else{
+
+		cout << "\r\t\tScales:\t[ NONE ]" << endl;
+
+		beatInstance -> addWarningMessage( instrumentName + ": No Scales Added." );
+
+	}
+
+}
+
+void Instrument::printScalesInfo(){
+
+  for( auto & scale : scales ){
+
+    scale -> Scale::printInfo();
+
+  }
 
 }
 
 void Instrument::play(){
 
-  if( rhythmPattern[ rhythmIndex ] == 'O' ){
+	int rhythmIndex = beatInstance -> getRhythmIndex();
 
-    thread t1( & Instrument::playWAV, this, SOUND1 );
-    t1.detach();
+	if( ! rhythms.size() ){
 
-  }
+		cout << "NO RHYTHMS" << endl;
 
-  else if( rhythmPattern[ rhythmIndex ] == 'X' ){
+		keepPlaying = false;
 
-    thread t1( & Instrument::playWAV, this, SOUND2 );
-    t1.detach();
+		return;
 
-  }
+	}
 
-  rhythmIndex = ( ++rhythmIndex ) % rhythmLength;
+	if( isdigit( rhythms[ currentRhythm ][ rhythmIndex ] ) ){
 
-}
+		playChannel( rhythms[ currentRhythm ][ rhythmIndex ] - '0' );
 
-Mix_Chunk * Instrument::getSyllable(){
-
-  if( rhythmPattern[ rhythmIndex ] == 'O' ){
-
-    return SOUND1;
-
-  }
-
-  else if( rhythmPattern[ rhythmIndex ] == 'X' ){
-
-    return SOUND2;
-
-  }
-
-  else{
-
-    return NULL;
-
-  }
-
-  rhythmIndex = ( ++rhythmIndex ) % rhythmLength;
-
-}
-
-int Instrument::getChannel(){
-
-  return channelNo;
-
-}
-
-void Instrument::clear(){
-
-  Mix_FreeChunk( SOUND1 );
-  Mix_FreeChunk( SOUND1 );
-
-  SOUND1 = NULL;
-  SOUND2 = NULL;
-
-}
-
-void Instrument::playWAV( Mix_Chunk * wav ){
-
-  if( sustain > 0 ){
-
-    cout << "Hear The Sustain: " << sustain << endl;
-
-  }
-
-  Mix_PlayChannelTimed( channelNo, wav, 0, sustain );
-
-}
-
-void Instrument::setRhythmPattern( string r ){
-
-  rhythmPattern = r;
-  rhythmLength = rhythmPattern.length();
-
-}
-
-int Instrument::getSyllables(){ return beatInstance -> getSyllables(); }
-
-//Sets Volume To A Percentage Of Maximum Volume
-void Instrument::setVolume( int v ){
-
-  Mix_Volume( channelNo, MIX_MAX_VOLUME / ( 100 / v ) );
+	}
 
 }

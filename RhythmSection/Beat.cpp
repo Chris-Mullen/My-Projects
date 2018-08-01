@@ -1,75 +1,79 @@
-#include "Drum_Looper.h"
+#include "RhythmSection.h"
+
+using namespace std;
 
 Beat * Beat::beatInstance;
 
-void Beat::incrementRhythmReps(){ getCurrentSection() -> incrementRhythmReps(); }
-void Beat::incrementSectionReps(){ getCurrentSection() -> incrementSectionReps(); }
+int Beat::channelCounter = 1;
 
-int Beat::getBPM(){ return BPM; }
-int Beat::getSyllables(){ return syllables; }
+void Beat::incrementRhythmIndex(){ rhythmIndex = ( ++rhythmIndex ) % ( subDivisions * meter ); }
+void Beat::incrementSectionReps(){ getCurrentSection() -> incrementSectionReps(); }
 int Beat::getThisSectionRep(){ return getCurrentSection() -> getThisSectionRep(); }
 int Beat::getThisRhythmRep(){ return getCurrentSection() -> getThisRhythmRep(); }
 int Beat::getSectionReps(){ return getCurrentSection() -> getSectionReps(); }
 int Beat::getRhythmReps(){ return getCurrentSection() -> getRhythmReps(); }
+int Beat::getCurrentSubDivision(){ return beatInstance -> rhythmIndex; }
+int Beat::getSubDivisions(){ return beatInstance -> subDivisions; }
+int Beat::getMeter(){ return beatInstance -> meter; }
+int Beat::getBPM(){ return beatInstance -> BPM; }
+int Beat::getRhythmIndex(){ return rhythmIndex; }
+int Beat::countDown(){ return countIn--; }
 
-int Beat::getSyllableLength(){
+void Beat::addWarningMessage( string m ){
 
-  float BPS = float( BPM ) / 60;
-  int64_t beatLength = int64_t( 1.0f / BPS * 1000.0f );
-  int64_t barLength = beatLength * meter;
-  int64_t syllableLength = barLength / syllables;
+	for( string str : warningMessages ){
 
-  return syllableLength;
+		if( m == str ){
 
- }
+			return;
 
-Section * Beat::getCurrentSection(){
+		}
 
-  if( thisSection < sections.size() ){
+	}
 
-    return sections[ thisSection ];
-
-  }
-
-  else{
-
-    if( thisBeatRep < beatRepetitions || beatRepetitions == 0 ){
-
-      thisBeatRep++;
-      thisSection = 0;
-
-      return sections[ thisSection ];
-
-    }
-
-    return NULL;
-
-  }
+	warningMessages.push_back( m );
 
 }
 
-string Beat::getTempoName(){
 
-  if( BPM < 24 ){ return "Larghissimo"; }
-  else if( BPM < 30 ){ return "Adagissimo"; }
-  else if( BPM < 35 ){ return "Sostenuto"; }
-  else if( BPM < 41 ){ return "Grave"; }
-  else if( BPM < 46 ){ return "Lento"; }
-  else if( BPM < 61 ){ return "Largo"; }
-  else if( BPM < 67 ){ return "Larghetto"; }
-  else if( BPM < 72 ){ return "Adagio"; }
-  else if( BPM < 77 ){ return "Adagietto"; }
-  else if( BPM < 80 ){ return "Andante"; }
-  else if( BPM < 86 ){ return "Marcia moderato"; }
-  else if( BPM < 109 ){ return "Andantino"; }
-  else if( BPM < 113 ){ return "Andante Moderato"; }
-  else if( BPM < 116 ){ return "Moderato"; }
-  else if( BPM < 121 ){ return "Allegro Moderato"; }
-  else if( BPM < 157 ){ return "Allegro"; }
-  else if( BPM < 173 ){ return "Vivace"; }
-  else if( BPM < 177 ){ return "Vivacissimo"; }
-  else if( BPM < 201 ){ return "Presto"; }
-  else{ return "Prestissimo"; }
+//Update Bar Counter Display
+void Beat::updateBarAnimation(){
+
+	int stringLength = subDivisions;
+	int beatIndex = subDivisions / meter;
+	int s = getRhythmIndex();
+
+	printf( "\r  %d BPM [%d/%d]: ", BPM, meter, noteValue );
+
+	for ( int i = 0; i <= stringLength; i++ ){
+
+		if( i == s ){
+
+			putchar( 'O' );
+
+		}
+
+		else{
+
+			if( i % beatIndex == 0 ){
+
+				putchar( '|' );
+
+			}
+
+			else{
+
+				putchar( '-' );
+
+			}
+
+		}
+
+	}
+
+	printf( " Bar: %d, Key: %s, Bass: %s \t\t", barCount, currentKey.c_str(), lastBassNote.c_str() );
+
+	fflush( stdout );
 
 }
 
@@ -79,15 +83,11 @@ void Beat::printInfo(){
   cout << "\"" << beatName << "\"" << endl;
   cout << "BPM:\t\t" << BPM << endl;
   cout << "Time Signature:\t" << meter << "/" << noteValue << endl;
-  cout << "Syllables:\t" << syllables << endl;
+  cout << "subDivisions:\t" << subDivisions << endl;
   cout << "Tempo:\t\t" << getTempoName() << endl;
-  //cout << "Instruments( " << instruments.size() << " ):" << endl;
   cout << "Sections( " << sections.size() << " ):" << endl;
 
-  //printInstrumentsInfo();
   printSectionsInfo();
-
-  cout << endl << "PID: " << getpid() << endl << endl;
 
   cout << DIVIDER4 << endl;
 
@@ -95,29 +95,17 @@ void Beat::printInfo(){
 
 void Beat::printSectionsInfo(){
 
+	int count = 0;
+
   for( auto & section : sections ){
+
+		cout << DIVIDER4 << endl;
+
+		cout << "Section " << ++count << ": ";
 
     section -> printInfo();
 
   }
-
-}
-
-//Convert timespec struct To Nanoseconds
-int64_t Beat::timespec_nanoseconds( timespec tv ){
-
-  return tv.tv_sec * 1000000000 + tv.tv_nsec;
-
-}
-
-//Convert Nanoseconds To timespec struct
-timespec Beat::nanoseconds_timespec( int64_t n ){
-
-  timespec result;
-  result.tv_sec = n / 1000000000;
-  result.tv_nsec = n % 1000000000;
-
-  return result;
 
 }
 
@@ -150,7 +138,9 @@ void Beat::waitForKeyboardInput(){
 
   string anyKey;
 
-  cout << "Return Key To Close..." << endl;
+	cout << endl << "\"" << beatName << "\"" << endl;
+
+  cout << endl << "Return Key To Close..." << endl << endl;
 
   while( keepPlaying && ! getline( cin, anyKey ) ){
 
@@ -166,10 +156,13 @@ void Beat::waitForKeyboardInput(){
 
   }
 
+	putchar( '\n' );
 
 }
 
 void Beat::timer_handler( int signum ){
+
+	updateBarAnimation();
 
   int64_t timeNow = 0;
   struct timespec ts;
@@ -178,17 +171,13 @@ void Beat::timer_handler( int signum ){
 
   timeNow = timespec_nanoseconds( ts ); //Get Current Time In Nanoseconds
 
-  incrementCounters();
-
-  if( getCurrentSection() != 0 ){
+	if( getCurrentSection() != 0 ){
 
     getCurrentSection() -> playInstruments();
 
   }
 
   else{
-
-    keepPlaying = 0;
 
     struct itimerval timer;
 
@@ -203,6 +192,8 @@ void Beat::timer_handler( int signum ){
 
   }
 
+	incrementCounters();
+
 }
 
 void Beat::static_timer_handler( int signum ){
@@ -211,19 +202,77 @@ void Beat::static_timer_handler( int signum ){
 
 }
 
-void Beat::startBeat(){
+void Beat::addSection( Section * s, int sectionReps ){
 
-  if( countIn ){
+	for( int i = 0; i < sectionReps; i++ ){
 
-    //TODO - This Should Play Only Once, In The Beginning. Not Repeated Like Other Sections
-    //Instrument metronome( "Metronome", "O---O---O---X---", FINGER_CLICK, HAND_CLAP );
+		sections.push_back( s );
+
+	}
+
+}
+
+void Beat::addSection( Section * s ){
+
+  sections.push_back( s );
+
+}
+
+void Beat::incrementCounters(){
+
+	if( rhythmIndex < ( subDivisions - 1 ) ){
+
+		beatInstance -> incrementRhythmIndex();
 
   }
+
+  else{
+
+    rhythmIndex = 0;
+    beatInstance -> incrementRhythmReps();
+
+  }
+
+}
+
+void Beat::incrementRhythmReps(){
+
+	if( beatInstance -> countIn > 0 ){
+
+		beatInstance -> countDown();
+
+	}
+
+	else{
+
+		beatInstance -> barCount++;
+
+		getCurrentSection() -> incrementRhythmReps();
+
+	}
+
+}
+
+void Beat::nextSection(){
+
+  if( beatInstance -> thisSection < beatInstance -> sections.size() ){
+
+    beatInstance -> thisSection++;
+
+  }
+
+	beatInstance -> currentKey = beatInstance -> getCurrentSection() -> getKeyName();
+
+}
+
+void Beat::startBeat(){
 
   struct sigaction sa;
   struct itimerval timer;
 
-  int delay_us = getSyllableLength() * 1000;
+	beatInstance -> currentKey = sections[ 0 ] -> getKeyName();
+
+	int delay_us = getSyllableLength() * 1000;
 
   memset( & sa, 0, sizeof( sa ) ) ;
 
@@ -238,41 +287,266 @@ void Beat::startBeat(){
 
   setitimer( ITIMER_REAL, & timer, NULL );
 
+	if( beatInstance -> warningMessages.size() != 0 ){
+
+		int count = 0;
+
+		cout << endl << "Warnings Detected:" << endl;
+
+		for( string str : warningMessages ){
+
+			cout << ++count << " ]  " << str << endl;
+
+		}
+
+	}
+
   //Program Exits When The User Inputs A String.
   thread t1( & Beat::waitForKeyboardInput, this );
   t1.join();
 
 }
 
-void Beat::addSection( Section * s ){
+void Beat::startBeat( int countInReps ){
 
-  sections.push_back( s );
+	Instrument countIn( "Stick Clicks", generateRhythm( meter ), STICK_CLICK );
+	Section countInSection( "Count-In", 1, 1 );
+	countInSection.addInstrument( & countIn );
+
+	beatInstance -> countIn = countInReps;
+	beatInstance -> countInSection = & countInSection;
+
+	cout << endl << "[ Counting In For " << countInReps << " Bars ]" << endl;
+
+	startBeat();
 
 }
 
-void Beat::incrementCounters(){
+int Beat::getSyllableLength(){
 
-  if( rhythmIndex < syllables ){
+  float BPS = float( BPM ) / 60;
+	int64_t beatLength = int64_t( 1.0f / BPS * 1000.0f );
+  int64_t barLength = beatLength * meter;
+  int64_t syllableLength = barLength / subDivisions;
 
-    rhythmIndex++;
+  return syllableLength;
+
+}
+
+int Beat::getBeatLength(){
+
+	float BPS = float( BPM ) / 60;
+	int64_t beatLength = int64_t( 1.0f / BPS * 1000.0f );
+
+	return beatLength * 1000000.0f;
+
+}
+
+Section * Beat::getCurrentSection(){
+
+	if( beatInstance -> countIn > 0 ){
+
+		if( beatInstance -> countIn == 0 ){
+
+			countInSection -> clearInstruments();
+
+		}
+
+		return countInSection;
+
+	}
+
+  if( thisSection < sections.size() ){
+
+    return sections[ thisSection ];
 
   }
 
   else{
 
-    rhythmIndex = 1;
-    incrementRhythmReps();
+    if( thisBeatRep < beatRepetitions || beatRepetitions == 0 ){
+
+      thisBeatRep++;
+      thisSection = 0;
+			barCount = 1;
+
+      return sections[ thisSection ];
+
+    }
+
+    return NULL;
 
   }
 
 }
 
-void Beat::nextSection(){
+string Beat::generateRhythm( int noteValue ){
 
-  if( beatInstance -> thisSection < beatInstance -> sections.size() ){
+	return generateRhythm( noteValue, '0', SCALE_TYPE_ROOT_ONLY, true );
 
-    beatInstance -> thisSection++;
+}
 
-  }
+string Beat::generateRhythm( int noteValue, char rhythmChar ){
+
+	return generateRhythm( noteValue, rhythmChar, SCALE_TYPE_DRUMKIT, true );
+
+}
+
+string Beat::generateRhythm( int noteValue, char rhythmChar, const int scaleType, bool divideBar ){
+
+	int subDivisions = beatInstance -> getSubDivisions();
+	int meter = beatInstance -> meter;
+	int barSubDivisions = subDivisions / noteValue;
+	int beatSubDivisions = subDivisions / meter;
+
+	if( noteValue > subDivisions ){
+
+		return string( subDivisions, '-' );
+
+	}
+
+	char secondaryInterval = '\\';
+
+	if( noteValue == 0 ){
+
+		return string( subDivisions, '-' );
+
+	}
+
+	else{
+
+		if( subDivisions % noteValue != 0 ){
+
+			if( noteValue != 1 ){
+
+				cout << "Warning: noteValue ( " << noteValue << " ) *Should* Be A Factor Of " << subDivisions << " ( For Consistency ) " << endl << endl;
+
+			}
+
+		}
+
+	}
+
+	string rhythm = "";
+
+	if( scaleType == SCALE_TYPE_DRUMKIT ){
+
+		secondaryInterval = rhythmChar;
+
+	}
+
+	else if( scaleType == SCALE_TYPE_ROOT_ONLY ){
+
+		secondaryInterval = '0';
+
+	}
+
+	if( divideBar ){
+
+		for( int i = 0; i < subDivisions; i++ ){
+
+			if( i % subDivisions == 0 ){
+
+				rhythm += rhythmChar;
+
+			}
+
+			else{
+
+				if( i % barSubDivisions == 0 ){
+
+					rhythm += secondaryInterval;
+
+				}
+
+				else{
+
+					rhythm += '-';
+
+				}
+
+			}
+
+		}
+
+	}
+
+	else{
+
+		for( int k = 0; k < meter; k++ ){
+
+			for( int i = 0; i < beatSubDivisions; i++ ){
+
+				if( i % noteValue == 0 ){
+
+					rhythm += rhythmChar;
+
+				}
+
+				else{
+
+					rhythm += "-";
+
+				}
+
+			}
+
+		}
+
+	}
+
+	return rhythm;
+
+}
+
+string Beat::getTempoName(){
+
+  if( beatInstance -> BPM < 24 ){ return "Larghissimo"; }
+  else if( beatInstance -> BPM < 30 ){ return "Adagissimo"; }
+  else if( beatInstance -> BPM < 35 ){ return "Sostenuto"; }
+  else if( beatInstance -> BPM < 41 ){ return "Grave"; }
+  else if( beatInstance -> BPM < 46 ){ return "Lento"; }
+  else if( beatInstance -> BPM < 61 ){ return "Largo"; }
+  else if( beatInstance -> BPM < 67 ){ return "Larghetto"; }
+  else if( beatInstance -> BPM < 72 ){ return "Adagio"; }
+  else if( beatInstance -> BPM < 77 ){ return "Adagietto"; }
+  else if( beatInstance -> BPM < 80 ){ return "Andante"; }
+  else if( beatInstance -> BPM < 86 ){ return "Marcia moderato"; }
+  else if( beatInstance -> BPM < 109 ){ return "Andantino"; }
+  else if( beatInstance -> BPM < 113 ){ return "Andante Moderato"; }
+  else if( beatInstance -> BPM < 116 ){ return "Moderato"; }
+  else if( beatInstance -> BPM < 121 ){ return "Allegro Moderato"; }
+  else if( beatInstance -> BPM < 157 ){ return "Allegro"; }
+  else if( beatInstance -> BPM < 173 ){ return "Vivace"; }
+  else if( beatInstance -> BPM < 177 ){ return "Vivacissimo"; }
+  else if( beatInstance -> BPM < 201 ){ return "Presto"; }
+	else if( beatInstance -> BPM < TEMPO_LIMIT ){ return "Prestissimo"; }
+  else{
+
+		cout << "BPM Too High ( Setting To Max ): " << TEMPO_LIMIT << endl;
+
+ 		beatInstance -> BPM = TEMPO_LIMIT;
+
+		return "Prestissimo";
+
+	}
+
+}
+
+//Convert timespec struct To Nanoseconds
+inline int64_t Beat::timespec_nanoseconds( timespec timeValue ){
+
+  return timeValue.tv_sec * 1000000000 + timeValue.tv_nsec;
+
+}
+
+//Convert Nanoseconds To timespec struct
+inline timespec Beat::nanoseconds_timespec( int64_t nano ){
+
+  timespec result;
+  result.tv_sec = nano / 1000000000;
+  result.tv_nsec = nano % 1000000000;
+
+  return result;
 
 }
