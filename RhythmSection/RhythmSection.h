@@ -49,7 +49,14 @@ public:
 		subDivisions( 1 ),
 		currentKey( "_" ),
 		lastBassNote( "_" ),
-		keepPlaying( true ){ std::cout << "Beat()" << std::endl; }
+		keepPlaying( true ){
+
+			std::cout << "Beat()" << std::endl;
+
+			//Reset Seed State To Ensure Randomness Of Generated Rhythms.
+			srand( time( NULL ) );
+
+	 }
 
   Beat( int bpm, float timesignature, int r, std::string n, int s ) :
 		BPM( bpm ),
@@ -66,34 +73,50 @@ public:
 		subDivisions( s * meter ),
 		currentKey( "_" ),
 		lastBassNote( "_" ),
-		keepPlaying( true ){ std::cout << "Beat()" << std::endl; }
+		keepPlaying( true ){
+
+			std::cout << "Beat()" << std::endl;
+
+			//Reset Seed State To Ensure Randomness Of Generated Rhythms.
+			srand( time( NULL ) );
+
+	 	}
 
   ~Beat(){
 
     std::cout << "~Beat()" << std::endl;
 
     sections.clear();
+		warningMessages.clear();
 
   }
 
   static Beat * beatInstance;
 	static int channelCounter;
 
-	static std::string generateRhythm( int noteValue );
-	static std::string generateRhythm( int noteValue, char rhythmChar );
-	static std::string generateRhythm( int noteValue, char rhythmChar, const int scaleType, bool direction );
-
-  bool keepPlaying;
-  int thisSection;
+	bool keepPlaying;
+	int thisSection;
 	int rhythmIndex;
 	int meter;
 	std::string lastBassNote;
+	std::string lastNoteName;
+	std::vector< std::string > warningMessages;
+
+	static std::string generateRhythm();
+	static std::string generateRhythm( char rhythmChar );
+	static std::string generateRhythm( const int style );
+	static std::string generateRhythm( const int style, int maxScaleInterval );
+	static std::string generateRhythm( char rhythmChar, int noteValue );
+	static std::string generateShuffleRhythm( int maxScaleInterval );
+	static std::string generateRiffs();
+	static std::string generateRiffs( int maxScaleInterval );
 
   virtual void printInfo();
 
   static void static_timer_handler( int signum );
   static void channel_finished( int channel );
 	static int getSubDivisions();
+	static int getBeatSubDivisions();
 	static int getCurrentSubDivision();
 	static int getNextChannel(){ return channelCounter++; }
 
@@ -129,12 +152,12 @@ public:
   int getRhythmReps();
 	int getRhythmIndex();
 	int countDown();
+	int pickRandom( int min, int max );
+	char nextScaleInterval( char currentScaleInterval, char maxChar );
 	std::string getTempoName();
 	std::string generateAnimationString();
   Section * getCurrentSection();
-	std::string lastNoteName;
 
-	std::vector< std::string > warningMessages;
 private:
 
 	int BPM, thisBeatRep, thisRhythm, barCount, beatRepetitions, noteValue, subDivisions, countIn;
@@ -195,16 +218,14 @@ public:
 		ChannelNumbers.clear();
 		Channels.clear();
 		rhythms.clear();
-		scales.clear();
 
   }
 
 	virtual void playWAV( Mix_Chunk * wav, int channelNo );
+	virtual void addRhythm( std::string rhythmPattern );
 	virtual void playChannel( int channelNo );
   virtual void printInfo();
-	virtual void printScalesInfo();
   virtual void play();
-	virtual void addRhythm( std::string rhythmPattern );
 
 	virtual void nextRhythmPattern();
 	virtual int getRhythmPatternCount();
@@ -212,7 +233,6 @@ public:
   void clear();
   void setVolume( int v );
 	void addChannel( const char * const c );
-	void setScales( std::vector< Scale * > s );
 	int getChannel();
 	int getChannelCount();
   int getSubDivisions();
@@ -226,7 +246,6 @@ public:
 	std::vector< int > ChannelNumbers;
 	std::vector< std::string > rhythms;
 	std::vector< Mix_Chunk * > Channels;
-	std::vector< Scale * > scales;
 
 private:
 
@@ -246,8 +265,11 @@ public:
 			lowestInterval( 16 ),	//E1
 			highestInterval( 54 ),	//Gb4
 			lastStringPlayed( 0 ),
+			strumSpeed( DEFAULT_STRUM_SPEED ),
 			rhythmCount( 1 ),
 			currentRhythm( 0 ),
+			currentScale( 0 ),
+			currentChord( 0 ),
 			sustain( -1 ),
 			instrumentName( n ),
 			volume( 100 ),
@@ -264,27 +286,37 @@ public:
 
     std::cout << "~Double_Bass()" << std::endl;
 
+		scales.clear();
+		chords.clear();
+
 		unloadStrings();
 
   }
 
 	virtual void play();
   virtual void printInfo();
-	virtual void printScalesInfo();
 	virtual void playWAV( Mix_Chunk * wav, int channelNo );
 	virtual void nextRhythmPattern();
 
+	virtual void printScalesInfo();
+	virtual void printChordsInfo();
 	void addScale( int scaleType );
+	void addChord( int chordType );
 	void playNote( int noteIndex );
 	void playNote( std::string noteName );
-	void playScale( std::string keyName, Scale s );
-	void playScale( std::string keyName, Scale s, int octaves );
-	void improvise( int stringNo );
+	void playNote( int noteIndex, int channelNo );
+	void playArpeggio( std::string keyName, Scale s );
+	void playArpeggio( std::string keyName, Scale s, int octaves );
+	void playChord( int keyIndex, Chord * c );
+	void playChord( int keyIndex, Chord * c, int octaves );
+	void improvise();
 	void playRoot();
 	void playGhostNote();
 	void loadChannels();
 	void loadStrings();
 	void unloadStrings();
+	int getScaleCount();
+	int getChordCount();
 
 private:
 
@@ -298,11 +330,15 @@ private:
   int volume;
   int sustain;
 	int currentRhythm;
+	int currentScale;
+	int currentChord;
 	int rhythmCount;
 	int lowestInterval;
 	int highestInterval;
 	int lastStringPlayed;
+	int strumSpeed;
 	std::vector< Scale > scales;
+	std::vector< Chord > chords;
 
 	std::string instrumentName;
 
@@ -318,7 +354,16 @@ public:
 	Drum_Kit( std::string n ) :
 		instrumentName( n ){ std::cout << "Drum_Kit()" << std::endl; }
 
-	~Drum_Kit(){ std::cout << "~Drum_Kit()" << std::endl; }
+	~Drum_Kit(){
+
+		std::cout << "~Drum_Kit()" << std::endl;
+
+		ChannelNumbers.clear();
+		ChannelNames.clear();
+		Channels.clear();
+		compositeRhythms.clear();
+
+	}
 
 	virtual void printInfo();
 	virtual void play();
@@ -348,7 +393,6 @@ public:
 		sectionName( n ),
 		rhythmRepetitions( 1 ),
 		sectionRepetitions( 1 ),
-		thisScale( 0 ),
 		keyIndex( Intervals::getIntervalIndex( k ) ),
 		thisSectionRepetition( 1 ),
 		thisRhythmRepetition( 1 ){ std::cout << "Section()" << std::endl; }
@@ -357,7 +401,6 @@ public:
 		sectionName( n ),
 		rhythmRepetitions( 1 ),
 		sectionRepetitions( s ),
-		thisScale( 0 ),
 		keyIndex( Intervals::getIntervalIndex( k ) ),
 		thisSectionRepetition( 1 ),
 		thisRhythmRepetition( 1 ){ std::cout << "Section()" << std::endl; }
@@ -366,7 +409,6 @@ public:
     sectionName( n ),
     rhythmRepetitions( r ),
     sectionRepetitions( s ),
-		thisScale( 0 ),
 		keyIndex( -1 ),
     thisSectionRepetition( 1 ),
     thisRhythmRepetition( 1 ){ std::cout << "Section()" << std::endl; }
@@ -375,7 +417,6 @@ public:
     sectionName( "_" + s -> sectionName + "_" ),
     rhythmRepetitions( s -> rhythmRepetitions ),
     sectionRepetitions( s -> sectionRepetitions ),
-		thisScale( 0 ),
 		keyIndex( s -> keyIndex ),
     thisSectionRepetition( s -> thisSectionRepetition ),
     thisRhythmRepetition( s -> thisRhythmRepetition ),
@@ -385,7 +426,6 @@ public:
     sectionName( newName ),
     rhythmRepetitions( s -> rhythmRepetitions ),
     sectionRepetitions( s -> sectionRepetitions ),
-		thisScale( 0 ),
 		keyIndex(  s -> keyIndex ),
     thisSectionRepetition( s -> thisSectionRepetition ),
     thisRhythmRepetition( s -> thisRhythmRepetition ),
@@ -412,7 +452,6 @@ public:
   void incrementSectionReps();
 	void clearInstruments();
 	void addInstrument( Instrument * i );
-	void addScale( Scale * s );
 	int getKeyIndex();
 	int getInstrumentCount();
   int getThisRhythmRep();
@@ -420,13 +459,10 @@ public:
 	int getSectionReps();
   int getRhythmReps();
 	std::string getSectionName();
-	Scale * getCurrentScale();
 	std::string getKeyName();
-	std::vector< Scale * > scales;
 
 private:
 
-	int thisScale;
   std::string sectionName;
 	std::vector< Instrument * > instruments;
 

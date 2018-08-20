@@ -138,4 +138,15 @@ const int SDL_RESERVED_CHANNELS = 64;
 
 const int TEMPO_LIMIT = 600;
 
+const int DEFAULT_STRUM_SPEED = 25000000;
+
+const int IMPROV_CHORD_RATIO = 8;	//1 / IMPROV_CHORD_RATIO	Ratio At Which A Chord Will Be Played Instead Of A Note During Improvisation.
+const int IMPROV_GHOST_RATIO = 2;	//1 / IMPROV_GHOST_RATIO	Ratio At Which A Ghost Note Will Be Played Before Or After The Beat During Improvisation.
+const int IMPROV_SKIP_RATIO = 4;	//1 / IMPROV_SKIP_RATIO	Ratio At Which A Note Will Be Skipped When Generating Rhythms.
+
+const char MIN_SCALE_INTERVAL = '0';	//Current Software Design Uses Strings And So Is Limited To Characters '0' To '9'. Most Common Scales Have Less Than 8 Notes Either Way.
+const char MAX_SCALE_INTERVAL = '9';	//Storing Intervals As Integers In A Linked List Would Fix This, But Is Still Limited To 12 Notes ( Chromatic Scale );
+
+const int STYLE_SHUFFLE = 0;	//A Characteristic Of This Style Is Adding Ghost Notes Before Or After The Beat.
+
 #endif

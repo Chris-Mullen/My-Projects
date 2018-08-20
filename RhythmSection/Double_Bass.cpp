@@ -4,21 +4,37 @@ using namespace std;
 
 const string Double_Bass::OpenStrings[] = { "E1", "A1", "D2", "G2" };
 
-void Double_Bass::addScale( int scaleType ){ scales.push_back( Intervals::getScale( scaleType ) ); }
+void Double_Bass::addScale( const int scaleType ){ scales.push_back( Scale( scaleType ) ); }
+void Double_Bass::addChord( const int chordType ){ chords.push_back( Chord( chordType ) ); }
 void Double_Bass::playRoot(){ playNote( beatInstance -> getCurrentSection() -> getKeyIndex() ); }
 void Double_Bass::playWAV( Mix_Chunk * wav, int stringChannel ){ Mix_PlayChannelTimed( stringChannel, wav, 0, sustain ); }
+int Double_Bass::getScaleCount(){ return scales.size(); }
+int Double_Bass::getChordCount(){ return chords.size(); }
 
 void Double_Bass::nextRhythmPattern(){
 
 	if( randomizeRyhthms ){
 
-		currentRhythm = ( rand() % getRhythmPatternCount() );
+		currentRhythm = ( beatInstance -> pickRandom( 0, getRhythmPatternCount() ) );
+		currentScale = ( beatInstance -> pickRandom( 0, getScaleCount() ) );
+		currentChord = ( beatInstance -> pickRandom( 0, getChordCount() ) );
 
 	}
 
 	else{
 
-		currentRhythm = ( ++currentRhythm ) % getRhythmPatternCount();
+		int rhythmPatternCount = getRhythmPatternCount();
+		int scaleCount = getScaleCount();
+		int chordCount = getChordCount();
+
+		if( rhythmPatternCount ){ currentRhythm = ( ++currentRhythm ) % rhythmPatternCount; }
+		else{ currentRhythm = 0; }
+
+		if( scaleCount ){ currentScale = ( ++currentScale ) % scaleCount; }
+		else{ currentScale = 0; }
+
+		if( chordCount ){ currentChord = ( ++currentChord ) % chordCount; }
+		else{ currentChord = 0; }
 
 	}
 
@@ -76,16 +92,6 @@ void Double_Bass::printInfo(){
 
 		printScalesInfo();
 
-		for( Scale s : scales ){
-
-			if( keyIndex + ( * ( s.getScalePattern() + s.getScaleSize() - 1 ) ) > highestInterval ){
-
-				beatInstance -> addWarningMessage( instrumentName + ": Key ( " + Intervals::getIntervalName( keyIndex ) + " ) Out Of Range, Some Notes Will Be Missing. Highest Note: " + Intervals::getIntervalName( highestInterval ) );
-
-			}
-
-		}
-
 	}
 
 	else{
@@ -96,17 +102,61 @@ void Double_Bass::printInfo(){
 
 	}
 
+	if( chords.size() > 0 ){
+
+		cout << "\r\t\tChords( " << chords.size() << " ):\t";
+
+		printChordsInfo();
+
+	}
+
+	else{
+
+		cout << "\t\tChords:\t[ NONE ]" << endl << "\t\t";
+
+		beatInstance -> addWarningMessage( instrumentName + ": No Chords Added." );
+
+	}
+
 }
 
 void Double_Bass::printScalesInfo(){
 
 	int keyIndex = beatInstance -> getCurrentSection() -> getKeyIndex();
 
-  for( Scale & scale : scales ){
+	int scaleCount = scales.size();
 
-    scale.printInfo( keyIndex );
+	for( int i = 0; i < scaleCount; i++ ){
 
-  }
+		scales[ i ].printInfo( keyIndex );
+
+		if( keyIndex + ( * ( scales[ i ].getScalePattern() + scales[ i ].getScaleSize() - 1 ) ) > highestInterval ){
+
+			beatInstance -> addWarningMessage( instrumentName + ": Key ( " + Intervals::getIntervalName( keyIndex ) + " ) Out Of Range, Some Notes Will Be Missing. Highest Note: " + Intervals::getIntervalName( highestInterval ) );
+
+		}
+
+	}
+
+}
+
+void Double_Bass::printChordsInfo(){
+
+	int keyIndex = beatInstance -> getCurrentSection() -> getKeyIndex();
+
+	int chordCount = chords.size();
+
+	for( int i = 0; i < chordCount; i++ ){
+
+		chords[ i ].printInfo( keyIndex );
+
+		if( keyIndex + ( * ( chords[ i ].getChordPattern() + chords[ i ].getChordSize() - 1 ) ) > highestInterval ){
+
+			beatInstance -> addWarningMessage( instrumentName + ": Key ( " + Intervals::getIntervalName( keyIndex ) + " ) Out Of Range, Some Notes Will Be Missing. Highest Note: " + Intervals::getIntervalName( highestInterval ) );
+
+		}
+
+	}
 
 }
 
@@ -249,8 +299,12 @@ void Double_Bass::play(){
 
 	int rhythmIndex = beatInstance -> getRhythmIndex();
 	int keyIndex = beatInstance -> getCurrentSection() -> getKeyIndex();
+	char currentChar = rhythms[ currentRhythm ][ rhythmIndex ];
+	int currentInterval = ( int )( currentChar - '0' );
 
-	if( isdigit( rhythms[ currentRhythm ][ rhythmIndex ] ) ){
+	currentInterval %= scales[ currentScale ].getScaleSize();
+
+	if( isdigit( currentChar ) ){
 
 		if( keyIndex == -1 ){
 
@@ -260,9 +314,15 @@ void Double_Bass::play(){
 
 		else{
 
-			playNote( ( ( int )rhythms[ currentRhythm ][ rhythmIndex ] - '0' ) + keyIndex );
+			playNote( * ( scales[ currentScale ].getScalePattern() + currentInterval ) + keyIndex );
 
 		}
+
+	}
+
+	else if( rhythms[ currentRhythm ][ rhythmIndex ] == 'C' ){
+
+		playChord( keyIndex, & chords.at( currentChord ) );
 
 	}
 
@@ -280,7 +340,7 @@ void Double_Bass::play(){
 
 	else if( rhythms[ currentRhythm ][ rhythmIndex ] == 'I' ){
 
-		improvise( 0 );
+		improvise();
 
 	}
 
@@ -313,51 +373,131 @@ void Double_Bass::playNote( string noteName ){
 
 }
 
-void Double_Bass::playScale( string keyName, Scale s, int octaves ){
+void Double_Bass::playNote( int noteIndex, int channelNo ){
+
+	string noteName = Intervals::getIntervalName( noteIndex );
+
+	for( int i = 0; i < fretCount; i++ ){
+
+		if( ( Intervals::getIntervalIndex( OpenStrings[ channelNo ] ) + i ) == noteIndex ){
+
+			beatInstance -> lastBassNote = noteName.substr( 0, noteName.size() - 1 );
+
+			lastStringPlayed = channelNo;
+
+			thread t1( & Double_Bass::playWAV, this, Strings[ channelNo ][ i ], ChannelNumbers[ channelNo ] );
+			t1.join();
+
+			return;
+
+		}
+
+		else if( ( Intervals::getIntervalIndex( OpenStrings[ channelNo ] ) + i ) % INTERVAL_PERFECT_OCTAVE == noteIndex % INTERVAL_PERFECT_OCTAVE ){
+
+			beatInstance -> lastBassNote = noteName.substr( 0, noteName.size() - 1 );
+
+			lastStringPlayed = channelNo;
+
+			thread t1( & Double_Bass::playWAV, this, Strings[ channelNo ][ i ], ChannelNumbers[ channelNo ] );
+			t1.join();
+
+			return;
+
+		}
+
+	}
+
+}
+
+void Double_Bass::playArpeggio( string keyName, Scale s ){
+
+	playArpeggio( keyName, s, 1 );
+
+}
+
+void Double_Bass::playArpeggio( string keyName, Scale s, int octaves ){
 
 	int scaleSize = s.getScaleSize();
 	int keyIndex = Intervals::getIntervalIndex( keyName );
-	int const * scale = s.getScalePattern();
+	int const * scalePattern = s.getScalePattern();
+	int const * scale = scalePattern;
 
 	for( int i = 0; i < octaves; i++ ){
 
 		for( int j = 0; j < scaleSize; j++ ){
 
-			this -> playNote( * scale + keyIndex + ( i * INTERVAL_PERFECT_OCTAVE ) );
+			this -> playNote( * scale + ( keyIndex + ( i * INTERVAL_PERFECT_OCTAVE ) ) );
 			rest( 1000000000 );
 
 			++scale;
 
 		}
 
+		scale = scalePattern;
+
 	}
 
-	this -> playNote( keyIndex + ( octaves * INTERVAL_PERFECT_OCTAVE ) );
-	rest( 1000000000 );
+}
+
+void Double_Bass::playChord( int keyIndex, Chord * c ){
+
+	playChord( keyIndex, c, 1 );
 
 }
 
-void Double_Bass::playScale( string keyName, Scale s ){
+void Double_Bass::playChord( int keyIndex, Chord * c, int octaves ){
 
-	playScale( keyName, s, 1 );
+	int chordSize = c -> getChordSize();
+	int const * chordPattern = c -> getChordPattern();
+	int const * chord = chordPattern;
+	string keyName = Intervals::getIntervalName( keyIndex );
+
+	beatInstance -> lastBassNote = keyName.substr( 0, keyName.size() - 1 );
+
+	for( int i = 0; i < octaves; i++ ){
+
+		for( int j = 0; j < chordSize && j < channelCount; j++ ){
+
+			this -> playNote( * chord + ( keyIndex + ( i * INTERVAL_PERFECT_OCTAVE ) ), j );
+
+			rest( strumSpeed );
+
+			++chord;
+
+		}
+
+		chord = chordPattern;
+
+	}
 
 }
 
-void Double_Bass::improvise( int stringNo ){
+void Double_Bass::improvise(){
 
 	int keyIndex = beatInstance -> getCurrentSection() -> getKeyIndex();
 
 	const int * scalePattern;
 
-	int randomScale = ( rand() % scales.size() );
+	int randomScale = ( beatInstance -> pickRandom( 0, getScaleCount() ) );
+	int randomScaleNote = ( beatInstance -> pickRandom( 0, scales[ randomScale ].getScaleSize() ) );
 
 	scalePattern = scales[ randomScale ].getScalePattern();
 
-	int randomScaleNote = ( rand() % scales[ randomScale ].getScaleSize() );
-
 	scalePattern += randomScaleNote;
 
-	playNote( ( * scalePattern + keyIndex ) );
+	if( beatInstance -> pickRandom( 0, IMPROV_CHORD_RATIO ) != 0 ){
+
+		playNote( ( * scalePattern + keyIndex ) );
+
+	}
+
+	else{
+
+		int randomChord = ( beatInstance -> pickRandom( 0, getChordCount() ) );
+
+		playChord( keyIndex + randomScaleNote, & chords[ randomChord ] );
+
+	}
 
 }
 

@@ -2,10 +2,34 @@
 
 using namespace std;
 
-int Instrument::getChannelCount(){ return Channels.size(); }
 int Instrument::getRhythmPatternCount(){ return rhythms.size(); }
-void Instrument::addRhythm( string rhythmPattern ){ rhythms.push_back( rhythmPattern ); }
-void Instrument::setScales( vector< Scale * > s ){ scales = s; }
+int Instrument::getChannelCount(){ return Channels.size(); }
+
+void Instrument::addRhythm( string rhythmPattern ){
+
+	int rhythmLength = rhythmPattern.length();
+	int subDivisions = Beat::getSubDivisions();
+
+	if( rhythmLength < subDivisions ){
+
+		if( subDivisions % rhythmLength == 0 ){
+
+			string rhythmPatternIn = rhythmPattern;
+
+			while( rhythmPattern.length() <= subDivisions ){
+
+				rhythmPattern += rhythmPatternIn;
+
+			}
+
+		}
+
+	}
+
+	rhythms.push_back( rhythmPattern );
+
+}
+
 void Instrument::playWAV( Mix_Chunk * wav, int channelNo ){ Mix_PlayChannelTimed( channelNo, wav, 0, sustain ); }
 
 //Sets Volume To A Percentage Of Maximum Volume
@@ -22,6 +46,9 @@ void Instrument::setVolume( int v ){
 void Instrument::nextRhythmPattern(){
 
 	if( randomizeRyhthms ){
+
+		//Reset Seed State To Ensure Randomness
+		srand( time( NULL ) );
 
 		currentRhythm = ( rand() % getRhythmPatternCount() );
 
@@ -107,32 +134,6 @@ void Instrument::printInfo(){
 		beatInstance -> addWarningMessage( instrumentName + ": No Channels Added." );
 
 	}
-
-	if( scales.size() > 0 ){
-
-		cout << "\r\t\tScales( " << scales.size() << " ):" << endl;
-
-		printScalesInfo();
-
-	}
-
-	else{
-
-		cout << "\r\t\tScales:\t[ NONE ]" << endl;
-
-		beatInstance -> addWarningMessage( instrumentName + ": No Scales Added." );
-
-	}
-
-}
-
-void Instrument::printScalesInfo(){
-
-  for( auto & scale : scales ){
-
-    scale -> Scale::printInfo();
-
-  }
 
 }
 

@@ -7,6 +7,7 @@ Intervals * Intervals::intervalsInstance;
 
 const string Intervals::Notes[] = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 const string Intervals::ScaleNames[] = { "Chromatic", "Major Pentatonic", "Minor Pentatonic", "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian" };
+const string Intervals::ChordNames[] = { "Major Triad", "Minor Triad", "Fifth", "Seventh", "Major Seventh", "Minor Seventh", "Dominant Seventh", "Suspended Fourth", "Major Add Nine", "Suspended Second", "Seven Suspended Fourth", "Seven Sharp Ninth", "Ninth" };
 
 const int Intervals::chromaticScale[] = {
 	INTERVAL_PERFECT_UNISON,
@@ -99,9 +100,82 @@ const int Intervals::locrianMode[] = {
 	INTERVAL_MINOR_SIXTH,
 	INTERVAL_MINOR_SEVENTH };
 
+//Chords
+const int Intervals::MajorTriadChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MAJOR_THIRD,
+	INTERVAL_PERFECT_FIFTH };
+
+const int Intervals::MinorTriadChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MINOR_THIRD,
+	INTERVAL_PERFECT_FIFTH };
+
+const int Intervals::FifthChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_PERFECT_FIFTH };
+
+const int Intervals::SeventhChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MAJOR_THIRD,
+	INTERVAL_MINOR_SEVENTH };
+
+const int Intervals::MajorSeventhChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MAJOR_THIRD,
+	INTERVAL_PERFECT_FIFTH,
+	INTERVAL_MAJOR_SEVENTH };
+
+const int Intervals::MinorSeventhChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MINOR_THIRD,
+	INTERVAL_PERFECT_FIFTH,
+	INTERVAL_MINOR_SEVENTH };
+
+const int Intervals::DominantSeventhChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MAJOR_THIRD,
+	INTERVAL_PERFECT_FIFTH,
+	INTERVAL_MINOR_SEVENTH };
+
+const int Intervals::SuspendedFourthChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MINOR_SECOND,
+	INTERVAL_PERFECT_FOURTH };
+
+const int Intervals::MajorAddNineChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MAJOR_SECOND,
+	INTERVAL_MAJOR_THIRD,
+	INTERVAL_PERFECT_FIFTH };
+
+const int Intervals::SuspendedSecondChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MINOR_SECOND,
+	INTERVAL_PERFECT_FIFTH };
+
+const int Intervals::SevenSuspendedFourthChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_PERFECT_FOURTH,
+	INTERVAL_PERFECT_FIFTH,
+	INTERVAL_MINOR_SEVENTH };
+
+const int Intervals::SevenSharpNinthChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MINOR_THIRD,
+	INTERVAL_MAJOR_THIRD,
+	INTERVAL_MINOR_SEVENTH };
+
+const int Intervals::NinthChord[] = {
+	INTERVAL_PERFECT_UNISON,
+	INTERVAL_MAJOR_SECOND,
+	INTERVAL_MAJOR_THIRD,
+	INTERVAL_PERFECT_FIFTH,
+	INTERVAL_MINOR_SEVENTH };
+
 string Intervals::getScaleName( int scaleType ){ return Intervals::ScaleNames[ scaleType ]; }
 int Scale::getScaleSize(){ return scaleSize; }
-const int * Scale::getScaleType(){ return & scaleType; }
+int * Scale::getScaleType(){ return & scaleType; }
 int const * Scale::getScalePattern(){ return scalePattern; }
 
 void Intervals::calculateNoteNames(){
@@ -258,14 +332,6 @@ string Intervals::getIntervalLabel( int semitones ){
 
 }
 
-Scale Intervals::getScale( int scaleType ){
-
-	Scale result( scaleType );
-
-	return result;
-
-}
-
 void Scale::setScalePattern( int t ){
 
 	scaleType = t;
@@ -275,69 +341,67 @@ void Scale::setScalePattern( int t ){
 		case SCALE_MAJOR_PENTATONIC:
 
 			scalePattern = pentatonicMajorScale;
-			scaleSize = INTERVALS_PENTATONIC_SCALE;
+			scaleSize = INTERVALS_PENTATONIC;
 
 			break;
 
 		case SCALE_MINOR_PENTATONIC:
 
 			scalePattern = pentatonicMinorScale;
-			scaleSize = INTERVALS_PENTATONIC_SCALE;
+			scaleSize = INTERVALS_PENTATONIC;
 
 			break;
 
 		case MODE_IONIAN:
 
 			scalePattern = ionianMode;
-			scaleSize = INTERVALS_DIATONIC_SCALE;
+			scaleSize = INTERVALS_DIATONIC;
 
 			break;
 
 		case MODE_DORIAN:
 
 			scalePattern = dorianMode;
-			scaleSize = INTERVALS_DIATONIC_SCALE;
+			scaleSize = INTERVALS_DIATONIC;
 
 			break;
 
 		case MODE_PHRYGIAN:
 
 			scalePattern = phrygianMode;
-			scaleSize = INTERVALS_DIATONIC_SCALE;
+			scaleSize = INTERVALS_DIATONIC;
 
 			break;
 
 		case MODE_LYDIAN:
 
 			scalePattern = lydianMode;
-			scaleSize = INTERVALS_DIATONIC_SCALE;
+			scaleSize = INTERVALS_DIATONIC;
 
 			break;
 
 		case MODE_MIXOLYDIAN:
 
 			scalePattern = mixolydianMode;
-			scaleSize = INTERVALS_DIATONIC_SCALE;
+			scaleSize = INTERVALS_DIATONIC;
 
 			break;
 
 		case MODE_AEOLIAN:
 
 			scalePattern = aeolianMode;
-			scaleSize = INTERVALS_DIATONIC_SCALE;
+			scaleSize = INTERVALS_DIATONIC;
 
 			break;
 
 		case MODE_LOCRIAN:
 
 			scalePattern = locrianMode;
-			scaleSize = INTERVALS_DIATONIC_SCALE;
+			scaleSize = INTERVALS_DIATONIC;
 
 			break;
 
 		default:
-
-			cout << endl << "DEFAULT" << endl << endl;
 
 			scalePattern = chromaticScale;
 			scaleSize = INTERVAL_PERFECT_OCTAVE;
@@ -381,6 +445,136 @@ void Scale::printInfo( int rootIndex ){
 
 	}
 
-	cout << DIVIDER2 << endl;
+	cout << DIVIDER2 << endl << "\t\t\t\t";
+
+}
+
+int Chord::getChordSize(){ return chordSize; }
+int const * Chord::getChordPattern(){ return chordPattern; }
+
+void Chord::printInfo( int rootIndex ){
+
+	cout << Intervals::ChordNames[ chordType ] << " Chord\t\t[ " << chordSize << " Notes ]" << endl << "\t\t\t\t";
+
+	int tmpInterval;
+
+	for( int i = 0; i < chordSize; i++ ){
+
+		tmpInterval = * ( chordPattern + i );
+
+		cout << "\t" << getIntervalLabel( tmpInterval ) << "\t( " << getIntervalName( rootIndex + tmpInterval ) << " )\t[ " << tmpInterval << " Semitones ]" << endl << "\t\t\t\t";
+
+	}
+
+	cout << DIVIDER2 << endl << "\t\t\t\t";
+
+}
+
+void Chord::setChordPattern( int t ){
+
+	chordType = t;
+
+	switch( t ){
+
+		case CHORD_MAJOR_TRIAD:
+
+			chordPattern = MajorTriadChord;
+			chordSize = INTERVALS_TRIAD;
+
+			break;
+
+		case CHORD_MINOR_TRIAD:
+
+			chordPattern = MinorTriadChord;
+			chordSize = INTERVALS_TRIAD;
+
+			break;
+
+		case CHORD_FIFTH:
+
+			chordPattern = FifthChord;
+			chordSize = INTERVALS_DIAD;
+
+			break;
+
+		case CHORD_SEVENTH:
+
+			chordPattern = SeventhChord;
+			chordSize = INTERVALS_TRIAD;
+
+			break;
+
+		case CHORD_MAJOR_SEVENTH:
+
+			chordPattern = MajorSeventhChord;
+			chordSize = INTERVALS_TETRATONIC;
+
+			break;
+
+		case CHORD_MINOR_SEVENTH:
+
+			chordPattern = MinorSeventhChord;
+			chordSize = INTERVALS_TETRATONIC;
+
+			break;
+
+		case CHORD_DOMINANT_SEVENTH:
+
+			chordPattern = DominantSeventhChord;
+			chordSize = INTERVALS_TETRATONIC;
+
+			break;
+
+		case CHORD_SUSPENDED_FOURTH:
+
+			chordPattern = SuspendedFourthChord;
+			chordSize = INTERVALS_TRIAD;
+
+			break;
+
+		case CHORD_MAJOR_ADD_NINE:
+
+			chordPattern = MajorAddNineChord;
+			chordSize = INTERVALS_TETRATONIC;
+
+			break;
+
+		case CHORD_SUSPENDED_SECOND:
+
+			chordPattern = SuspendedSecondChord;
+			chordSize = INTERVALS_TRIAD;
+
+			break;
+
+		case CHORD_SEVEN_SUSPENDED_FOURTH:
+
+			chordPattern = SevenSuspendedFourthChord;
+			chordSize = INTERVALS_TETRATONIC;
+
+			break;
+
+		case CHORD_SEVEN_SHARP_NINTH:
+
+			chordPattern = SevenSharpNinthChord;
+			chordSize = INTERVALS_TETRATONIC;
+
+			break;
+
+		case CHORD_NINTH:
+
+			chordPattern = NinthChord;
+			chordSize = INTERVALS_PENTATONIC;
+
+			break;
+
+		default:
+
+			chordPattern = MajorTriadChord;
+			chordSize = INTERVALS_TRIAD;
+			chordType = CHORD_MAJOR_TRIAD;
+
+			break;
+
+	}
 
 }

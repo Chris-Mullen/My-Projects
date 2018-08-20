@@ -5,7 +5,41 @@ using namespace std;
 int Drum_Kit::getRhythmPatternCount(){ return compositeRhythms.size(); }
 int Drum_Kit::getChannelCount(){ return Channels.size(); }
 
-void Drum_Kit::addRhythm( vector< string > compositeRhythm ){ compositeRhythms.push_back( compositeRhythm ); }
+void Drum_Kit::addRhythm( vector< string > compositeRhythm ){
+
+	int rhythmLength;
+	string rhythmPattern, rhythmPatternIn;
+	int subDivisions = Beat::getSubDivisions();
+
+	for( int i = 0; i < compositeRhythm.size(); i++ ){
+
+		rhythmPatternIn = compositeRhythm.at( i );
+		rhythmPattern = "";
+
+		rhythmLength = rhythmPatternIn.length();
+
+		if( rhythmLength < subDivisions ){
+
+			if( subDivisions % rhythmLength == 0 ){
+
+				while( rhythmPattern.length() < subDivisions ){
+
+					rhythmPattern += rhythmPatternIn;
+
+				}
+
+				compositeRhythm[ i ] = rhythmPattern;
+
+			}
+
+		}
+
+	}
+
+	compositeRhythms.push_back( compositeRhythm );
+
+}
+
 void Drum_Kit::addRhythm( string rhythmPattern ){
 
 	int rhythmLength = rhythmPattern.length();
@@ -133,7 +167,8 @@ void Drum_Kit::play(){
 
 	if( ! compositeRhythms.size() ){
 
-		addRhythm( Beat::generateRhythm( getMeter() , '0' ) );
+		// addRhythm( Beat::generateRhythm( getMeter(), '0' ) );
+		addRhythm( Beat::generateRhythm( getMeter() ) );
 
 	}
 

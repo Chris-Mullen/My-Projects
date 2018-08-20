@@ -3,7 +3,7 @@
 using namespace std;
 
 /*
-reset; rm RhythmSection.out; g++ -std=c++11 -pthread main.cpp Intervals.cpp Beat.cpp Section.cpp Instrument.cpp Drum_Kit.cpp Double_Bass.cpp -o RhythmSection.out -lSDL2_mixer $(pkg-config --cflags --libs sdl2); ./RhythmSection.out 90 4.4
+reset; rm RhythmSection.out; g++ -std=c++11 -pthread main.cpp Intervals.cpp Beat.cpp Section.cpp Instrument.cpp Drum_Kit.cpp Double_Bass.cpp -o RhythmSection.out -lSDL2_mixer $(pkg-config --cflags --libs sdl2); ./RhythmSection.out 90 4.4 A1
 */
 
 //Initialize SDL Library
@@ -47,118 +47,52 @@ void demo_12BB_Shuffle( int BPM, float timeSignature, string key, int subDivisio
 
 	Drum_Kit D_1( "Drums_1" );
 	Drum_Kit D_2( "Drums_2" );
-	Double_Bass DB_1( "Double Bass_1" );
-	Double_Bass DB_2( "Double Bass_2" );
+	Double_Bass DB_1( "Double_Bass_1" );
+	Double_Bass DB_2( "Double_Bass_2" );
+
+	D_1.addChannel( KICK_DRUM, "Kick_Drum", 80 );
+	D_1.addChannel( SNARE_DRUM_1, "Snare_Drum", 40 );
+	D_1.addChannel( SNARE_BRUSH_2, "Snare_Ghost" );
+	D_1.addChannel( HIGH_HAT_CLOSED, "High_Hat_Closed", 20 );
+
+	D_2.addChannel( KICK_DRUM, "Kick_Drum" );
+	D_2.addChannel( HIGH_HAT_CLOSED, "High_Hat_Closed", 40 );
+	D_2.addChannel( HIGH_HAT_OPEN, "High_Hat_Open", 40 );
+	D_1.addChannel( SNARE_DRUM_2, "Snare_Drum", 50 );
+	D_2.addChannel( CRASH_CYMBAL, "Crash_Cymbal", 50 );
+	D_2.addChannel( RIDE_CYMBAL, "Ride_Cymbal", 40 );
+	D_2.addChannel( COW_BELL, "More_Cowbell", 50 );
 
 	DB_1.addScale( SCALE_MINOR_PENTATONIC );
 	DB_2.addScale( SCALE_MINOR_PENTATONIC );
 
-	string kick1 = 						"0---------------0---------------";
-	string kick2 = 						"0-----0---------0-----0---------";
-	string kick3 = 						"0-----0-------0-0-----0-------0-";
-	string kick4 = 						"0-------------0-----------------";
-	string kick5 = 						"0-------------0-------0-------0-";
+	DB_1.addChord( CHORD_MINOR_TRIAD );
+	DB_2.addChord( CHORD_MINOR_TRIAD );
 
-	string kickTurn =					"0-------0-------0-------0-------";
-	string highhatTurn1 =			"------1-1-----1-------1-1-----1-";
-	string highhatTurn2 =			"------1-------1-------1-------1-";
+	D_1.addRhythm( beat1.generateRhythm() );
+	D_2.addRhythm( beat1.generateRhythm() );
 
-	string snare1 = 					"--------1---------------1-------";
-	string snare2 = 					"--------1---------------1-----1-";
-	string snare3 = 					"--------1-2-------------1-2-----";
-	string snare4 = 					"--2-----1-2-------2-----1-2-----";
-	string snare5 = 					"--2-------2-----1-2-------2-----";
+	DB_1.addRhythm( beat1.generateRhythm() );
+	DB_1.addRhythm( beat1.generateRhythm( 'C' ) );
+	DB_1.addRhythm( beat1.generateRhythm( 'I' ) );
+	DB_1.addRhythm( beat1.generateRhythm( 'C', 2 ) );
+	DB_1.addRhythm( beat1.generateRhythm( 'I', 2 ) );
+	DB_1.addRhythm( beat1.generateRiffs( INTERVALS_PENTATONIC ) );
 
-	string highhat1 = 				"3-----3-3-----3-3-----3-3-----3-";
+	for( int i = 0; i < 10; i++ ){
 
-	string bassTurnaround1 = 	"0-------3-------5-------7-------";
-	string bassTurnaround2 = 	"0---0---3---3---5---5---7---7---";
-	string bassTurnaround3 = 	"0-----0-3-----3-5-----5-7-----7-";
-	string bassTurnaround4 = 	"0-----0-3-0---3-5-0---5-7-0-5-7-";
-	string bassTurnaround5 = 	"0-----0-3-0-X-3-5-0---5-7-0-5-7-";
-	string bassTurnaround6 = 	"0-----0-3-0---3-5-0-X-5-X-0-5-7-";
-	string bassTurnaround7 = 	"0---X-0-3-0-X-3-5-0---5-X-0-5-7-";
+		vector< string > tmpCompositeRhythm;
+		tmpCompositeRhythm.push_back( "3-----3-" );
+		tmpCompositeRhythm.push_back( beat1.generateRhythm( STYLE_SHUFFLE ) );
 
-	vector< string > compositeRhythm0;
-	compositeRhythm0.push_back( kick1 );
-	compositeRhythm0.push_back( snare1 );
+		D_1.addRhythm( tmpCompositeRhythm );
+		D_2.addRhythm( tmpCompositeRhythm );
+		D_2.addRhythm( beat1.generateRiffs( D_2.getChannelCount() ) );
 
-	vector< string > compositeRhythm1;
-	compositeRhythm1.push_back( highhat1 );
-	compositeRhythm1.push_back( kick1 );
-	compositeRhythm1.push_back( snare1 );
+		DB_1.addRhythm( beat1.generateRhythm( STYLE_SHUFFLE, INTERVALS_PENTATONIC ) );
+		DB_2.addRhythm( beat1.generateRiffs( INTERVALS_PENTATONIC ) );
 
-	vector< string > compositeRhythm2;
-	compositeRhythm2.push_back( highhat1 );
-	compositeRhythm2.push_back( kick2 );
-	compositeRhythm2.push_back( snare2 );
-
-	vector< string > compositeRhythm3;
-	compositeRhythm3.push_back( highhat1 );
-	compositeRhythm3.push_back( kick1 );
-	compositeRhythm3.push_back( snare3 );
-
-	vector< string > compositeRhythm4;
-	compositeRhythm4.push_back( highhat1 );
-	compositeRhythm4.push_back( kick3 );
-	compositeRhythm4.push_back( snare4 );
-
-	vector< string > compositeRhythm5;
-	compositeRhythm5.push_back( highhat1 );
-	compositeRhythm5.push_back( kick4 );
-	compositeRhythm5.push_back( snare5 );
-
-	vector< string > compositeRhythm6;
-	compositeRhythm6.push_back( highhat1 );
-	compositeRhythm6.push_back( kick5 );
-	compositeRhythm6.push_back( snare5 );
-
-	vector< string > turnaroundRhythm1;
-	turnaroundRhythm1.push_back( kickTurn );
-	turnaroundRhythm1.push_back( highhatTurn1 );
-
-	vector< string > turnaroundRhythm2;
-	turnaroundRhythm2.push_back( kickTurn );
-	turnaroundRhythm2.push_back( highhatTurn2 );
-
-	D_1.addRhythm( beat1.generateRhythm( beat1.getMeter() , '0' ) );
-	D_1.addRhythm( compositeRhythm0 );
-	D_1.addRhythm( compositeRhythm1 );
-	D_1.addRhythm( compositeRhythm2 );
-	D_1.addRhythm( compositeRhythm3 );
-	D_1.addRhythm( compositeRhythm4 );
-	D_1.addRhythm( compositeRhythm5 );
-	D_1.addRhythm( compositeRhythm6 );
-
-	D_2.addRhythm( beat1.generateRhythm( beat1.getMeter(), '0' ) );
-	D_2.addRhythm( beat1.generateRhythm( beat1.getMeter() * 2, '0' ) );
-	D_2.addRhythm( beat1.generateRhythm( beat1.getMeter() * 4, '0' ) );
-	D_2.addRhythm( kick1 );
-	D_2.addRhythm( kick2 );
-	D_2.addRhythm( kick3 );
-	D_2.addRhythm( turnaroundRhythm1 );
-	D_2.addRhythm( turnaroundRhythm2 );
-	D_2.addRhythm( compositeRhythm0 );
-
-	DB_1.addRhythm( beat1.generateRhythm( beat1.getMeter(), '0' ) );
-	DB_1.addRhythm( beat1.generateRhythm( beat1.getMeter() * 2, '0' ) );
-	DB_1.addRhythm( beat1.generateRhythm( beat1.getMeter(), 'I' ) );
-
-	DB_2.addRhythm( bassTurnaround1 );
-	DB_2.addRhythm( bassTurnaround2 );
-	DB_2.addRhythm( bassTurnaround3 );
-	DB_2.addRhythm( bassTurnaround4 );
-	DB_2.addRhythm( bassTurnaround5 );
-	DB_2.addRhythm( bassTurnaround6 );
-	DB_2.addRhythm( bassTurnaround7 );
-
-	D_1.addChannel( KICK_DRUM, "Kick Drum" );
-	D_1.addChannel( SNARE_DRUM_1, "Snare Drum" );
-	D_1.addChannel( SNARE_BRUSH_2, "Snare Ghost" );
-	D_1.addChannel( HIGH_HAT_CLOSED, "High Hat", 30 );
-
-	D_2.addChannel( KICK_DRUM, "Kick Drum" );
-	D_2.addChannel( HIGH_HAT_CLOSED, "High Hat", 30 );
+	}
 
 	string IV_Chord = Intervals::getIntervalName( Intervals::getIntervalIndex( key ) + 5 );
 	string V_Chord = Intervals::getIntervalName( Intervals::getIntervalIndex( key ) + 7 );
@@ -239,7 +173,6 @@ int main( int argc, char * argv[] ){
 		cout << "No Input Parameters Recieved, Using Defaults:" << endl << "BPM: " << BPM << ", Sub-Divisions: " << subDivisions << ", Time Signature: " << timeSignature << ", Key: " << key << endl << endl << "Example: \"./RhythmSection.out 90 4.4 A1\"" << endl << endl;
 
 	}
-
 
 	string tmpParam;
 
@@ -325,7 +258,7 @@ int main( int argc, char * argv[] ){
 
   }
 
- 	demo_12BB_Shuffle( BPM, timeSignature, key, subDivisions );
+	demo_12BB_Shuffle( BPM, timeSignature, key, subDivisions );
 
   closeSDL();
 

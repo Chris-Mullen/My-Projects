@@ -4,7 +4,6 @@ using namespace std;
 
 void Section::setKey( string k ){ keyIndex = Intervals::getIntervalIndex( k ); }
 
-void Section::addScale( Scale * s ){ scales.push_back( s ); }
 void Section::clearInstruments(){ instruments.clear(); }
 int Section::getInstrumentCount(){ return instruments.size(); }
 int Section::getThisSectionRep(){ return thisSectionRepetition; }
@@ -40,8 +39,6 @@ void Section::printInstrumentsInfo(){
 }
 
 void Section::addInstrument( Instrument * i ){
-
-	i -> setScales( this -> scales );
 
   instruments.push_back( i );
 
@@ -120,15 +117,5 @@ string Section::getKeyName(){
 		return keyName.substr( 0, keyName.size() - 1 );
 
 	}
-
-}
-
-Scale * Section::getCurrentScale(){
-
-  if( thisScale < scales.size() ){
-
-    return scales[ thisScale ];
-
-  }
 
 }

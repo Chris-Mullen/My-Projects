@@ -14,10 +14,277 @@ int Beat::getSectionReps(){ return getCurrentSection() -> getSectionReps(); }
 int Beat::getRhythmReps(){ return getCurrentSection() -> getRhythmReps(); }
 int Beat::getCurrentSubDivision(){ return beatInstance -> rhythmIndex; }
 int Beat::getSubDivisions(){ return beatInstance -> subDivisions; }
+int Beat::getBeatSubDivisions(){ return ( beatInstance -> subDivisions / beatInstance -> meter ); }
 int Beat::getMeter(){ return beatInstance -> meter; }
 int Beat::getBPM(){ return beatInstance -> BPM; }
 int Beat::getRhythmIndex(){ return rhythmIndex; }
 int Beat::countDown(){ return countIn--; }
+string Beat::generateRiffs(){ return generateRiffs( MAX_SCALE_INTERVAL - '0' ); }
+
+string Beat::generateRiffs( int maxScaleInterval ){
+
+	maxScaleInterval--;
+
+	string riffString = "";
+
+	int subDivisions = beatInstance -> getSubDivisions();
+	int meter = beatInstance -> getMeter();
+	int beatSubDivisions = subDivisions / meter;
+	int ghostIndex = subDivisions;
+	char ghostChar = '0';
+
+	int noteValue = beatInstance -> pickRandom( 1, ( int )( beatSubDivisions / 2 ) );
+
+	for( int i = 0; i < subDivisions; i++ ){
+
+		if( i % beatSubDivisions == 0 ){
+
+			if( ( i / beatSubDivisions ) % noteValue == 0 ){
+
+				riffString += '0';
+
+				//Schedule Ghost Note After Beat
+				if( beatInstance -> pickRandom( 0, IMPROV_GHOST_RATIO ) ){
+
+					ghostIndex = i + 2;
+					ghostChar = beatInstance -> nextScaleInterval( ghostChar, ( maxScaleInterval + '0' ) );
+
+				}
+
+				//Add Ghost Note Before Beat
+				if( beatInstance -> pickRandom( 0, IMPROV_GHOST_RATIO ) ){
+
+					if( i > 2 ){
+
+						ghostChar = beatInstance -> nextScaleInterval( ghostChar, ( maxScaleInterval + '0' ) );
+						riffString[ i - 2 ] = ghostChar;
+
+					}
+
+				}
+
+			}
+
+			else{
+
+				ghostChar = beatInstance -> nextScaleInterval( ghostChar, ( maxScaleInterval + '0' ) );
+				riffString += ghostChar;
+
+				//Schedule Ghost Note After Beat
+				if( beatInstance -> pickRandom( 0, IMPROV_GHOST_RATIO ) ){
+
+					ghostIndex = i + 2;
+					ghostChar = beatInstance -> nextScaleInterval( ghostChar, ( maxScaleInterval + '0' ) );
+
+				}
+
+				//Add Ghost Note Before Beat
+				if( beatInstance -> pickRandom( 0, IMPROV_GHOST_RATIO ) ){
+
+					ghostChar = beatInstance -> nextScaleInterval( ghostChar, ( maxScaleInterval + '0' ) );
+					riffString[ i - 2 ] = ghostChar;
+
+				}
+
+			}
+
+		}
+
+		else if( i % ghostIndex == 0 ){
+
+			riffString += ghostChar;
+			ghostIndex = subDivisions;
+
+		}
+
+		else{
+
+			riffString += '-';
+
+		}
+
+	}
+
+	return riffString;
+
+}
+
+string Beat::generateRhythm(){
+
+	string rhythmString = "";
+	int meter = beatInstance -> getMeter();
+
+	for( int i = 0; i < meter; i++ ){
+
+		rhythmString += '0' + string( ( beatInstance -> getBeatSubDivisions() - 1 ), '-' );
+
+	}
+
+	return rhythmString;
+}
+
+string Beat::generateRhythm( char rhythmChar ){
+
+	string rhythmString = "";
+	int meter = beatInstance -> getMeter();
+	int subDivisions = beatInstance -> getBeatSubDivisions();
+
+	for( int i = 0; i < meter; i++ ){
+
+		if( beatInstance -> pickRandom( 0, IMPROV_SKIP_RATIO ) != 0 ){
+
+			rhythmString += rhythmChar + string( ( subDivisions - 1 ), '-' );
+
+		}
+
+		else{
+
+			rhythmString += string( subDivisions, '-' );
+
+		}
+
+	}
+
+	return rhythmString;
+
+}
+
+string Beat::generateRhythm( char rhythmChar, int noteValue ){
+
+	string rhythmString = "";
+	int subDivisions = beatInstance -> getBeatSubDivisions() / noteValue;
+	int meter = beatInstance -> getMeter();
+
+	for( int i = 0; i < meter; i++ ){
+
+		for( int j = 0; j < noteValue; j++ ){
+
+			if( beatInstance -> pickRandom( 0, IMPROV_SKIP_RATIO ) != 0 ){
+
+				rhythmString += rhythmChar + string( ( subDivisions - 1 ), '-' );
+
+			}
+
+			else{
+
+				rhythmString += string( subDivisions, '-' );
+
+			}
+
+		}
+
+	}
+
+	return rhythmString;
+
+}
+
+string Beat::generateRhythm( const int style ){ return generateRhythm( style, 3 ); }
+
+string Beat::generateRhythm( const int style, int maxScaleInterval ){
+
+	switch( style ){
+
+		case STYLE_SHUFFLE:
+
+			return generateShuffleRhythm( maxScaleInterval );
+
+			break;
+
+		default:
+
+			return generateRhythm();
+
+			break;
+
+	};
+
+}
+
+string Beat::generateShuffleRhythm( int maxScaleInterval ){
+
+	string rhythmString = "";
+
+	int subDivisions = beatInstance -> getSubDivisions();
+	int meter = beatInstance -> getMeter();
+	int beatSubDivisions = subDivisions / meter;
+	int ghostIndex = subDivisions;
+	char ghostChar = '-';
+
+	int noteValue = beatInstance -> pickRandom( 1, ( int )( beatSubDivisions / 2 ) );
+
+	for( int i = 0; i < subDivisions; i++ ){
+
+		if( i % beatSubDivisions == 0 ){
+
+			if( ( i / beatSubDivisions ) % noteValue == 0 ){
+
+				rhythmString += '0';
+
+				//Schedule Ghost Note After Beat
+				if( beatInstance -> pickRandom( 0, IMPROV_GHOST_RATIO ) ){
+
+					ghostIndex = i + 2;
+					ghostChar = '0';
+
+				}
+
+				//Add Ghost Note Before Beat
+				if( beatInstance -> pickRandom( 0, IMPROV_GHOST_RATIO ) ){
+
+					if( i > 2 ){
+
+						ghostChar = ( beatInstance -> pickRandom( 0, maxScaleInterval ) + '0' );
+						rhythmString[ i - 2 ] = ghostChar;
+
+					}
+
+				}
+
+			}
+
+			else{
+
+				rhythmString += ( beatInstance -> pickRandom( 0, maxScaleInterval ) + '0' );
+
+				//Schedule Ghost Note After Beat
+				if( beatInstance -> pickRandom( 0, 2 ) ){
+
+					ghostIndex = i + 2;
+					ghostChar = ( beatInstance -> pickRandom( 0, maxScaleInterval ) + '0' );
+
+				}
+
+				//Add Ghost Note Before Beat
+				if( beatInstance -> pickRandom( 0, 2 ) ){
+
+					ghostChar = ( beatInstance -> pickRandom( 0, maxScaleInterval ) + '0' );
+					rhythmString[ i - 2 ] = ghostChar;
+
+				}
+
+			}
+
+		}
+
+		else if( i % ghostIndex == 0 ){
+
+			rhythmString += ghostChar;
+			ghostIndex = subDivisions;
+
+		}
+
+		else{
+
+			rhythmString += '-';
+
+		}
+
+	}
+
+	return rhythmString;
+
+}
 
 void Beat::addWarningMessage( string m ){
 
@@ -34,7 +301,6 @@ void Beat::addWarningMessage( string m ){
 	warningMessages.push_back( m );
 
 }
-
 
 //Update Bar Counter Display
 void Beat::updateBarAnimation(){
@@ -309,7 +575,7 @@ void Beat::startBeat(){
 
 void Beat::startBeat( int countInReps ){
 
-	Instrument countIn( "Stick Clicks", generateRhythm( meter ), STICK_CLICK );
+	Instrument countIn( "Stick Clicks", generateRhythm(), STICK_CLICK );
 	Section countInSection( "Count-In", 1, 1 );
 	countInSection.addInstrument( & countIn );
 
@@ -380,122 +646,14 @@ Section * Beat::getCurrentSection(){
 
 }
 
-string Beat::generateRhythm( int noteValue ){
+char Beat::nextScaleInterval( char currentScaleInterval, char maxChar ){
 
-	return generateRhythm( noteValue, '0', SCALE_TYPE_ROOT_ONLY, true );
+	if( beatInstance -> pickRandom( 0, 2 ) == 0 ){ currentScaleInterval++; }
+	else{ currentScaleInterval--; }
 
-}
-
-string Beat::generateRhythm( int noteValue, char rhythmChar ){
-
-	return generateRhythm( noteValue, rhythmChar, SCALE_TYPE_DRUMKIT, true );
-
-}
-
-string Beat::generateRhythm( int noteValue, char rhythmChar, const int scaleType, bool divideBar ){
-
-	int subDivisions = beatInstance -> getSubDivisions();
-	int meter = beatInstance -> meter;
-	int barSubDivisions = subDivisions / noteValue;
-	int beatSubDivisions = subDivisions / meter;
-
-	if( noteValue > subDivisions ){
-
-		return string( subDivisions, '-' );
-
-	}
-
-	char secondaryInterval = '\\';
-
-	if( noteValue == 0 ){
-
-		return string( subDivisions, '-' );
-
-	}
-
-	else{
-
-		if( subDivisions % noteValue != 0 ){
-
-			if( noteValue != 1 ){
-
-				cout << "Warning: noteValue ( " << noteValue << " ) *Should* Be A Factor Of " << subDivisions << " ( For Consistency ) " << endl << endl;
-
-			}
-
-		}
-
-	}
-
-	string rhythm = "";
-
-	if( scaleType == SCALE_TYPE_DRUMKIT ){
-
-		secondaryInterval = rhythmChar;
-
-	}
-
-	else if( scaleType == SCALE_TYPE_ROOT_ONLY ){
-
-		secondaryInterval = '0';
-
-	}
-
-	if( divideBar ){
-
-		for( int i = 0; i < subDivisions; i++ ){
-
-			if( i % subDivisions == 0 ){
-
-				rhythm += rhythmChar;
-
-			}
-
-			else{
-
-				if( i % barSubDivisions == 0 ){
-
-					rhythm += secondaryInterval;
-
-				}
-
-				else{
-
-					rhythm += '-';
-
-				}
-
-			}
-
-		}
-
-	}
-
-	else{
-
-		for( int k = 0; k < meter; k++ ){
-
-			for( int i = 0; i < beatSubDivisions; i++ ){
-
-				if( i % noteValue == 0 ){
-
-					rhythm += rhythmChar;
-
-				}
-
-				else{
-
-					rhythm += "-";
-
-				}
-
-			}
-
-		}
-
-	}
-
-	return rhythm;
+	if( currentScaleInterval < MIN_SCALE_INTERVAL ){ return maxChar; }
+	else if( currentScaleInterval > maxChar ){ return MIN_SCALE_INTERVAL; }
+	else{ return currentScaleInterval; }
 
 }
 
@@ -548,5 +706,13 @@ inline timespec Beat::nanoseconds_timespec( int64_t nano ){
   result.tv_nsec = nano % 1000000000;
 
   return result;
+
+}
+
+//Pick Random Number From A Range
+inline int Beat::pickRandom( int min, int max ){
+
+	double r = rand() / static_cast< double >( RAND_MAX );
+	return min + static_cast< int >( r * ( max - min ) );
 
 }

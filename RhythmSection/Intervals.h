@@ -5,9 +5,7 @@
 #include <string>
 #include <vector>
 
-const int SCALE_TYPE_DRUMKIT = -1;	//Special Scale Type Used To Sequence Drum Beats
-const int SCALE_TYPE_ROOT_ONLY = -2;	//Special Scale Type Used To Sequence Drum Beats
-
+//Scales
 const int SCALE_CHROMATIC = 0;
 
 const int SCALE_MAJOR_PENTATONIC = 1;
@@ -24,6 +22,22 @@ const int MODE_LOCRIAN = 9;
 const int SCALE_MAJOR = MODE_IONIAN;	//Synonym
 const int SCALE_MINOR = MODE_AEOLIAN;	//Synonym
 
+//Chords
+const int CHORD_MAJOR_TRIAD = 0;
+const int CHORD_MINOR_TRIAD = 1;
+const int CHORD_FIFTH = 2;
+const int CHORD_SEVENTH = 3;
+const int CHORD_MAJOR_SEVENTH = 4;
+const int CHORD_MINOR_SEVENTH = 5;
+const int CHORD_DOMINANT_SEVENTH = 6;
+const int CHORD_SUSPENDED_FOURTH = 7;
+const int CHORD_MAJOR_ADD_NINE = 8;
+const int CHORD_SUSPENDED_SECOND = 9;
+const int CHORD_SEVEN_SUSPENDED_FOURTH = 10;
+const int CHORD_SEVEN_SHARP_NINTH = 11;
+const int CHORD_NINTH = 12;
+
+//Intervals
 const int INTERVAL_PERFECT_UNISON = 0;
 const int INTERVAL_MINOR_SECOND = 1;
 const int INTERVAL_MAJOR_SECOND = 2;
@@ -38,9 +52,14 @@ const int INTERVAL_MINOR_SEVENTH = 10;
 const int INTERVAL_MAJOR_SEVENTH = 11;
 const int INTERVAL_PERFECT_OCTAVE = 12;
 
-const int INTERVALS_PENTATONIC_SCALE = 5;
-const int INTERVALS_HEXATONIC_SCALE = 6;
-const int INTERVALS_DIATONIC_SCALE = 7;
+const int INTERVALS_DIAD = 2;
+const int INTERVALS_TRIAD = 3;
+const int INTERVALS_TETRATONIC = 4;
+const int INTERVALS_PENTATONIC = 5;
+const int INTERVALS_HEXATONIC = 6;
+const int INTERVALS_DIATONIC = 7;
+const int INTERVALS_OCTATONIC = 8;
+const int INTERVALS_NONATONIC = 9;
 
 class Scale;
 
@@ -60,6 +79,7 @@ public:
 
 	static Intervals * intervalsInstance;
 
+	//Scales
 	static const int chromaticScale[];
 	static const int pentatonicMajorScale[];
 	static const int pentatonicMinorScale[];
@@ -72,9 +92,25 @@ public:
 	static const int aeolianMode[];
 	static const int locrianMode[];
 
+	//Chords
+	static const int MajorTriadChord[];
+	static const int MinorTriadChord[];
+
+	static const int FifthChord[];
+	static const int SeventhChord[];
+	static const int MajorSeventhChord[];
+	static const int MinorSeventhChord[];
+	static const int DominantSeventhChord[];
+	static const int SuspendedFourthChord[];
+	static const int MajorAddNineChord[];
+	static const int SuspendedSecondChord[];
+	static const int SevenSuspendedFourthChord[];
+	static const int SevenSharpNinthChord[];
+	static const int NinthChord[];
+
 	const static std::string Notes[];
 	const static std::string ScaleNames[];
-	static Scale getScale( int scaleType );
+	const static std::string ChordNames[];
 	std::string getScaleName( int scaleType );
 
 	static int getIntervalIndex( std::string noteName );
@@ -95,13 +131,13 @@ class Scale : public Intervals{
 
 public:
 
-	Scale() : scaleType( 0 ){
+	Scale(){
 
 			std::cout << "Scale()" << std::endl;
 
 			setScalePattern( SCALE_CHROMATIC );
 
-		}
+	}
 
 	Scale( int scaleType ){
 
@@ -111,29 +147,13 @@ public:
 
 	}
 
-	Scale( std::string n, const int scaleType ){
-
-			std::cout << "Scale()" << std::endl;
-
-			setScalePattern( scaleType );
-
-	}
-
-	Scale( int r, std::string n, const int scaleType ){
-
-			std::cout << "Scale()" << std::endl;
-
-			setScalePattern( scaleType );
-
-	}
-
 	~Scale(){ std::cout << "~Scale()" << std::endl; }
 
 	void printInfo();
 	void printInfo( int rootIndex );
 	void setScalePattern( const int t );
 	int getScaleSize();
-	const int * getScaleType();
+	int * getScaleType();
 	int const * getScalePattern();
 
 private:
@@ -142,6 +162,42 @@ private:
 	int scaleSize;
 
 	const int * scalePattern;
+
+};
+
+class Chord: public Scale{
+
+public:
+
+	Chord(){
+
+			std::cout << "Chord()" << std::endl;
+
+			setChordPattern( CHORD_MAJOR_TRIAD );
+
+		}
+
+	Chord( int chordType ){
+
+		std::cout << "Chord()" << std::endl;
+
+		setChordPattern( chordType );
+
+	}
+
+	~Chord(){ std::cout << "~Chord()" << std::endl; }
+
+	void printInfo( int rootIndex );
+	void setChordPattern( const int t );
+	int getChordSize();
+	int const * getChordPattern();
+
+private:
+
+	int chordType;
+	int chordSize;
+
+	const int * chordPattern;
 
 };
 
