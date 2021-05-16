@@ -18,9 +18,15 @@ rails
 ```
 rails new music_sort_service --api -T
 bundle install
-rails generate model Song title:String genre:String comments:String path:String album:references track:Integer disk:Integer
+rails generate model Song title:String comments:String path:String album:references genre:references track:Integer disk:Integer
 rails generate model Album title:String artist:references year:Integer total_tracks:Integer total_disks:Integer
 rails generate model Artist title:String
+rails generate model Genre title:String
+
+rails generate controller Songs create update destroy show
+rails generate controller Albums show
+rails generate controller Artists show
+rails generate controller Genres show
 ```
 
 ## Steps to set up the database for development
