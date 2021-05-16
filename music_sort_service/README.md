@@ -55,8 +55,7 @@ rspec
 ## Testing the service endpoints
 ### POST
 ```
-curl --header "Content-Type: application/json" --request POST --data  '{"title":"Title","artist":"Artist","album":"Album","track_number":"1","total_track_number":"10","disk_number":"1","total_disk_number":"2","genre":"Genre","comments":"Comments","path":"~/Music/example.mp3"}'
-http://localhost:3000/music-sort-service
+curl --header "Content-Type: application/json" --request POST --data  '{"title":"Title","artist":"Artist","album":"Album","track_number":"1","total_track_number":"10","disk_number":"1","total_disk_number":"2","genre":"Genre","comments":"Comments","path":"~/Music/example.mp3"}' http://localhost:3000/music-sort-service/v1
 ```
 
 ### PATCH
