@@ -27,6 +27,10 @@ rails generate controller Songs create update destroy show
 rails generate controller Albums show
 rails generate controller Artists show
 rails generate controller Genres show
+
+rails generate serializer Song title comments path artist album genre track disk
+rails generate serializer Album title artist year tracks disks
+rails generate serializer Artist title
 ```
 
 ## Steps to set up the database for development
