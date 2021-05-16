@@ -31,6 +31,7 @@ rails generate controller Genres show
 rails generate serializer Song title comments path artist album genre track disk
 rails generate serializer Album title songs artist year tracks disks
 rails generate serializer Artist title albums
+rails generate serializer Genre title songs
 ```
 
 ## Steps to set up the database for development
