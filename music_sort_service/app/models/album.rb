@@ -1,6 +1,6 @@
 #  frozen_string_literal: true
 
-# Album class definition
+# Album model definition
 class Album < ApplicationRecord
   belongs_to :artist
 
