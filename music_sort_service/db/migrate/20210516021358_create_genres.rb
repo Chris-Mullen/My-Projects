@@ -1,3 +1,6 @@
+#  frozen_string_literal: true
+
+# Genre migration definition
 class CreateGenres < ActiveRecord::Migration[6.1]
   def change
     create_table :genres, id: false do |t|

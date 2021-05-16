@@ -1,3 +1,6 @@
+#  frozen_string_literal: true
+
+# Album migration definition
 class CreateAlbums < ActiveRecord::Migration[6.1]
   def change
     create_table :albums, id: false do |t|

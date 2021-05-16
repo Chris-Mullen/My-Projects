@@ -1,3 +1,6 @@
+#  frozen_string_literal: true
+
+# Artist migration definition
 class CreateArtists < ActiveRecord::Migration[6.1]
   def change
     create_table :artists, id: false do |t|

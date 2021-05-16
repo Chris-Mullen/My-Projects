@@ -1,3 +1,6 @@
+#  frozen_string_literal: true
+
+# Song migration definition
 class CreateSongs < ActiveRecord::Migration[6.1]
   def change
     create_table :songs, id: false do |t|

@@ -1,3 +1,6 @@
+#  frozen_string_literal: true
+
+# Song model definition
 class Song < ApplicationRecord
   belongs_to :album
 

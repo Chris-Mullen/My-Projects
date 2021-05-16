@@ -1,3 +1,6 @@
+#  frozen_string_literal: true
+
+# Parent controller
 class ApplicationController < ActionController::API
   # Public: Display error messages in JSON format
   def render_json_validation_error(resource)
