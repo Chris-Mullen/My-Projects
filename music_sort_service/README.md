@@ -17,18 +17,20 @@ rails
 ## Steps to create the service
 ```
 rails new music_sort_service --api -T
+bundle install
+rails generate model Song title:String genre:String comments:String path:String album:references track:Integer disk:Integer
+rails generate model Album title:String artist:references year:Integer total_tracks:Integer total_disks:Integer
+rails generate model Artist title:String
 ```
 
-## Steps to set up the database
+## Steps to set up the database for development
 ```
 rails db:create
-rails db:migrate
 rails db:setup
 ```
 
 ## Running the service
 ```
-bundle install
 rails server
 ```
 
@@ -40,13 +42,13 @@ rspec
 ## Testing the service endpoints
 ### POST
 ```
-curl --header "Content-Type: application/json" --request POST --data \ '{"name":"Name","artist":"Artist","album":"Album","track_number":"1","total_track_number":"10","disk_number":"1","total_disk_number":"2","genre":"Genre","comments":"Comments","path":"~/Music/example.mp3"}' \
+curl --header "Content-Type: application/json" --request POST --data \ '{"title":"Title","artist":"Artist","album":"Album","track_number":"1","total_track_number":"10","disk_number":"1","total_disk_number":"2","genre":"Genre","comments":"Comments","path":"~/Music/example.mp3"}' \
 http://localhost:3000/music-sort-service
 ```
 
 ### PATCH
 ```
-curl --header "Content-Type: application/json" --request PATCH --data \ '{"name":"Name"}' localhost:3000/music-sort-service/songs/:song_id
+curl --header "Content-Type: application/json" --request PATCH --data \ '{"title":"Title"}' localhost:3000/music-sort-service/songs/:song_id
 ```
 
 ### GET
