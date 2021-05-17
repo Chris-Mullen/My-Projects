@@ -1,6 +1,7 @@
 # My-Projects
 
 **music_sort_service - 2021**
+
 This component REST service serves as an example for future projects. It functions as an interface to an SQL database which tracks a media library. This is currently in an early stage of development so is intended as a demonstration only
 
 *Technologies Used: Ruby on Rails*
