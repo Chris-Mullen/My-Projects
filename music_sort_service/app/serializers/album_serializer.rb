@@ -2,5 +2,8 @@
 
 # Album serializer definition
 class AlbumSerializer < ActiveModel::Serializer
-  attributes :title, :songs, :artist, :year, :tracks, :disks
+  attributes :title, :songs, :artists, :year, :tracks, :disks
+
+  def artists; end
+  def songs; end
 end

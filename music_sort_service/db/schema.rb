@@ -10,41 +10,45 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20_210_516_021_358) do
-  create_table 'albums', id: false, charset: 'utf8', force: :cascade do |t|
-    t.string 'uuid', limit: 36, null: false
-    t.string 'title'
-    t.string 'artist_id', null: false
-    t.integer 'year'
-    t.integer 'total_tracks'
-    t.integer 'total_disks', default: 1
-    t.datetime 'created_at', precision: 6, null: false
-    t.datetime 'updated_at', precision: 6, null: false
-    t.index ['artist_id'], name: 'index_albums_on_artist_id'
+ActiveRecord::Schema.define(version: 2021_05_16_021358) do
+
+  create_table "albums", id: false, charset: "utf8", force: :cascade do |t|
+    t.string "uuid", limit: 36, null: false
+    t.string "title"
+    t.integer "year"
+    t.integer "tracks"
+    t.integer "disks", default: 1
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table 'artists', id: false, charset: 'utf8', force: :cascade do |t|
-    t.string 'uuid', limit: 36, null: false
-    t.string 'title'
-    t.datetime 'created_at', precision: 6, null: false
-    t.datetime 'updated_at', precision: 6, null: false
+  create_table "artists", id: false, charset: "utf8", force: :cascade do |t|
+    t.string "uuid", limit: 36, null: false
+    t.string "title"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table 'genres', id: false, charset: 'utf8', force: :cascade do |t|
-    t.string 'uuid', limit: 36, null: false
-    t.string 'title'
-    t.datetime 'created_at', precision: 6, null: false
-    t.datetime 'updated_at', precision: 6, null: false
+  create_table "genres", id: false, charset: "utf8", force: :cascade do |t|
+    t.string "uuid", limit: 36, null: false
+    t.string "title"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table 'songs', id: false, charset: 'utf8', force: :cascade do |t|
-    t.string 'uuid', limit: 36, null: false
-    t.string 'title'
-    t.string 'comments'
-    t.string 'path'
-    t.integer 'track'
-    t.integer 'disk', default: 1
-    t.datetime 'created_at', precision: 6, null: false
-    t.datetime 'updated_at', precision: 6, null: false
+  create_table "songs", id: false, charset: "utf8", force: :cascade do |t|
+    t.string "uuid", limit: 36, null: false
+    t.string "title"
+    t.string "comments"
+    t.string "path"
+    t.string "album_id", null: false
+    t.string "genre_id", null: false
+    t.integer "track"
+    t.integer "disk", default: 1
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["album_id"], name: "index_songs_on_album_id"
+    t.index ["genre_id"], name: "index_songs_on_genre_id"
   end
+
 end
