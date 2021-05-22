@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   namespace :music_sort_service, path: 'music-sort-service' do
     namespace :v1 do
       post '', to: 'songs#create'
+      post 'albums', to: 'albums#create'
+      post 'artists', to: 'artists#create'
+      post 'genres', to: 'genres#create'
       get 'songs/show', to: 'songs#show'
       get 'albums/show', to: 'albums#show'
       get 'artists/show', to: 'artists#show'

@@ -56,7 +56,10 @@ rspec
 ## Testing the service endpoints
 ### POST
 ```
-curl --header "Content-Type: application/json" --request POST --data  '{"title":"Title","artist":"Artist","album":"Album","track":"1","tracks":"10","disk":"1","disks":"2","genre":"Genre","comments":"Comments","path":"~/Music/example.mp3"}' http://localhost:3000/music-sort-service/v1
+curl --header "Content-Type: application/json" --request POST --data  '{"title":"Classical"}' http://localhost:3000/music-sort-service/v1/genres
+curl --header "Content-Type: application/json" --request POST --data  '{"title":"Ludwig Van Beethoven"}' http://localhost:3000/music-sort-service/v1/artists
+curl --header "Content-Type: application/json" --request POST --data  '{"title":"Symphonies","artist":"Ludwig Van Beethoven","year":"1808","tracks":"1"disks":"1"}' http://localhost:3000/music-sort-service/v1/albums
+curl --header "Content-Type: application/json" --request POST --data  '{"title":"Symphony No.6 (1st movement)","artist":"Ludwig Van Beethoven","album":"Symphonies","track":"1","tracks":"1","disk":"1","disks":"1","genre":"Classical","comments":"","path":"~/GIT/PROJECTS/My-Projects/music_sort_service/demo/Symphony No.6 (1st movement).mp3"}' http://localhost:3000/music-sort-service/v1
 ```
 
 ### PATCH
