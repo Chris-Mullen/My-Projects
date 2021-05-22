@@ -2,5 +2,7 @@
 
 # Artist model definition
 class Artist < ApplicationRecord
-  validates :title, presence: true, allow_blank: false
+  belongs_to :album, optional: true
+
+  validates :title, presence: true, uniqueness: true, allow_blank: false
 end

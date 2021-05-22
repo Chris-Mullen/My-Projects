@@ -2,9 +2,9 @@
 
 # Album model definition
 class Album < ApplicationRecord
-  belongs_to :artist
+  has_many :artists
+  has_many :songs
 
   validates :title, presence: true, allow_blank: false
-  validates :artist, presence: true, allow_blank: false
   validates :year, presence: true, allow_blank: false
 end
