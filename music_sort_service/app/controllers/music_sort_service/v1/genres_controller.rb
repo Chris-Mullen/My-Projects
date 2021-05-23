@@ -7,7 +7,7 @@ module MusicSortService
       def create
         genre = Genre.new(genre_params)
         unless genre.save
-          render_json_validation_error genre
+          render_json_validation_error(genre)
           return
         end
 

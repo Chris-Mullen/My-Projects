@@ -7,7 +7,7 @@ module MusicSortService
       def create
         album = Album.new(album_params)
         unless album.save
-          render_json_validation_error album
+          render_json_validation_error(album)
           return
         end
 

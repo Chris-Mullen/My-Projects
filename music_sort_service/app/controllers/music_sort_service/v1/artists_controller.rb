@@ -7,7 +7,7 @@ module MusicSortService
       def create
         artist = Artist.new(artist_params)
         unless artist.save
-          render_json_validation_error artist
+          render_json_validation_error(artist)
           return
         end
 

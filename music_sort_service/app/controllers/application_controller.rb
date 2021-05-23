@@ -11,14 +11,10 @@ class ApplicationController < ActionController::API
   end
 
   # Public: Display 404 error messages in JSON format
-  def render_json_not_found_error(attribute, value)
+  def render_json_not_found_error(key, value)
     render  status: :not_found,
             adapter: :json_api,
-            serializer: ActiveModel::Serializer::ErrorSerializer,
-            json: {
-              'attribute': attribute,
-              'value': value
-            }
+            json: {key => value}
   end
 
 end
