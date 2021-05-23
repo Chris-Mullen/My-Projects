@@ -16,5 +16,4 @@ class ApplicationController < ActionController::API
             adapter: :json_api,
             json: {key => value}
   end
-
 end
