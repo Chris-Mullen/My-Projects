@@ -10,6 +10,13 @@ class ApplicationController < ActionController::API
             json: resource
   end
 
+  # Public: Display 400 error messages in JSON format
+  def render_json_duplicate_error(song, album)
+    render  status: :bad_request,
+            adapter: :json_api,
+            json: {"song" => song, "album" => album}
+  end
+
   # Public: Display 404 error messages in JSON format
   def render_json_not_found_error(key, value)
     render  status: :not_found,

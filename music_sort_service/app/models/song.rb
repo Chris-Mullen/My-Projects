@@ -9,19 +9,7 @@ class Song < ApplicationRecord
   validates :album_id, presence: true, allow_blank: false
   validates :genre_id, presence: true, allow_blank: false
 
-  def self.create_song(params)
-    album_id = Album.where(title: params[:album]).first.uuid
-    unless album_id
-      render_json_not_found_error('album', params[:album])
-      return
-    end
-
-    genre_id = Genre.where(title: params[:genre]).first.uuid
-    unless genre_id
-      render_json_not_found_error('genre', params[:genre])
-      return
-    end
-
+  def self.create_song(params, genre_id, album_id)
     song = Song.new(
       {
         title: params[:title],
