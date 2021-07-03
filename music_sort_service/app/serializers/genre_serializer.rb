@@ -2,7 +2,7 @@
 
 # Genre serializer definition
 class GenreSerializer < ActiveModel::Serializer
-  attributes :title, :songs
+  attributes :uuid, :title, :songs
 
   def songs; end
 end

@@ -14,7 +14,12 @@ module MusicSortService
         render json: genre, status: :created
       end
 
-      def show; end
+      def show
+        render json: Genre.where(uuid: params[:genre_id])
+      end
+
+
+      def show_all; end
 
       private
 

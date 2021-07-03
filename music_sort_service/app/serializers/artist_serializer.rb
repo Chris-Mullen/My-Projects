@@ -2,7 +2,7 @@
 
 # Artist serializer definition
 class ArtistSerializer < ActiveModel::Serializer
-  attributes :title, :albums
-  
+  attributes :uuid, :title, :albums
+
   def albums; end
 end

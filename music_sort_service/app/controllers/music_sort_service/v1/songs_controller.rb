@@ -52,7 +52,11 @@ module MusicSortService
 
       def destroy; end
 
-      def show; end
+      def show
+        render json: Song.where(uuid: params[:song_id])
+      end
+
+      def show_all; end
     end
   end
 end

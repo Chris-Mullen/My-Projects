@@ -64,7 +64,7 @@ curl --header "Content-Type: application/json" --request POST --data  '{"title":
 
 ### PATCH
 ```
-curl --header "Content-Type: application/json" --request PATCH --data \ '{"title":"Title"}' localhost:3000/music-sort-service/songs/:song_id
+curl --header "Content-Type: application/json" --request PATCH --data \ '{"title":"Title"}' localhost:3000/music-sort-service/v1/songs/:song_id
 ```
 
 ### GET
@@ -84,5 +84,5 @@ curl localhost:3000/music-sort-service/v1/songs?page[limit]=2&page[nextLink]=ffa
 
 ### DELETE
 ```
-curl -X DELETE localhost:3000/music-sort-service/songs/:song_id
+curl -X DELETE localhost:3000/music-sort-service/v1/songs/:song_id
 ```
