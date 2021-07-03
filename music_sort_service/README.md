@@ -69,16 +69,16 @@ curl --header "Content-Type: application/json" --request PATCH --data \ '{"title
 
 ### GET
 ```
-curl localhost:3000/music-sort-service/songs
-curl localhost:3000/music-sort-service/artists/
-curl localhost:3000/music-sort-service/artists/:artist
-curl localhost:3000/music-sort-service/albums/
-curl localhost:3000/music-sort-service/albums/:album
-curl localhost:3000/music-sort-service/genres/
-curl localhost:3000/music-sort-service/genres/:genre
-curl localhost:3000/music-sort-service/songs/:song_id
+curl localhost:3000/music-sort-service/v1/songs
+curl localhost:3000/music-sort-service/v1/artists/
+curl localhost:3000/music-sort-service/v1/artists/:artist
+curl localhost:3000/music-sort-service/v1/albums/
+curl localhost:3000/music-sort-service/v1/albums/:album
+curl localhost:3000/music-sort-service/v1/genres/
+curl localhost:3000/music-sort-service/v1/genres/:genre
+curl localhost:3000/music-sort-service/v1/songs/:song_id
 
-curl localhost:3000/music-sort-service/songs?page[limit]=2&page[nextLink]=ffa850e5-9c4a-4bb9-b31d-19f07d5a6efd_2021-01-01T00:00:00Z
+curl localhost:3000/music-sort-service/v1/songs?page[limit]=2&page[nextLink]=ffa850e5-9c4a-4bb9-b31d-19f07d5a6efd_2021-01-01T00:00:00Z
 
 ```
 
