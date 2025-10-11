@@ -1,5 +1,12 @@
 # My-Projects
 
+**RhythmSection.com - 2025**
+
+RhythmSection.com is an interactive version of RhythmSection (see below) and is currently in development stage. I have some screenshots of my progress to date and I plan to keep the project private as a potential side business, live demo available at request.
+
+*Technologies Used: Java21, Spring Boot, React*
+
+
 **music_sort_service - 2021**
 
 This component REST service serves as an example for future projects. It functions as an interface to an SQL database which tracks a media library. This is currently in an early stage of development so is intended as a demonstration only
