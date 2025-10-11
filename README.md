@@ -6,6 +6,7 @@ RhythmSection.com is an interactive version of RhythmSection (see below) and is 
 
 *Technologies Used: Java21, Spring Boot, React*
 
+---
 
 **music_sort_service - 2021**
 
@@ -13,6 +14,7 @@ This component REST service serves as an example for future projects. It functio
 
 *Technologies Used: Ruby on Rails*
 
+---
 
 **RhythmSection - 2018**
 
@@ -22,6 +24,7 @@ Recommended Usage: ./RhythmSection.out 90 4.4 A1
 
 *Technologies Used: C++, SDL_Mixer, UNIX*
 
+---
 
 **PythonScales - 2018**
 
@@ -31,6 +34,7 @@ This Project began as a precursor to RhythmSection above and its functionality w
 
 *Technologies Used: Python, Sound eXchange ( SoX ), UNIX*
 
+---
 
 **Block Smash (Android Alarm Clock Application) - 2017**
 
@@ -38,6 +42,7 @@ This is a simple alarm clock application which is made up of a 19*9 grid of colo
 
 *Technologies Used: Unity, C#, Android, Windows*
 
+---
 
 **Google Maps Flight Sim - 2016**
 
@@ -45,9 +50,12 @@ This is a small game utilizing the user’s geographic location and Google Maps 
 
 *Technologies Used: Unity, C#, Google Maps Static API, Android, Windows*
 
+---
 
 **Temporal Compression of Digital Holograms Using the ffmpeg Standard - 2016**
 
 This was my final year project as part of my BSc in Computer Science and Software Engineering. It mainly consists of research/experimentation with various features of the ffmpeg standard to discover weaknesses and breaking points when applied to digital hologram compression. I then developed a pre/post processing wrapper function in GNU Octave to overcome these weaknesses, specifically utilizing inter-frame compression to improve detection of redundant noise patterns in adjacent video frames, and how corruptions in these patterns are dealt with.
  
 *Technologies Used: GNU Octave, ffmpeg.*
+
+---
