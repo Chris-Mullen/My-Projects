@@ -2,17 +2,19 @@
 
 **RhythmSection.com - 2025**
 
-RhythmSection.com is an interactive version of RhythmSection (see below) and is currently in development stage. I have some screenshots of my progress to date and I plan to keep the project private as a potential side business, live demo available at request.
+RhythmSection.com is an interactive version of the Fretboard Generator and RhythmSection projects (see below) and is currently in development stage. I have some screenshots of my progress to date and I plan to keep the project private as a potential side business, as accompanyment to in-person or virtual lessons and eventually as a subscription model, live demo available at request.
 
 *Technologies Used: Java21, Spring Boot, React*
 
 ---
 
-**music_sort_service - 2021**
+**Fretboard Generator - 2023**
 
-This component REST service serves as an example for future projects. It functions as an interface to an SQL database which tracks a media library. This is currently in an early stage of development so is intended as a demonstration only
+I designed the Fretboard Generator to work on my Python skills and as a way to teach myself musical scales, chords, intervals, etc. on the guitar and other instruments. I think music is more about discovery than invention so I wanted to deconstruct how scales are created and related from a different perspective to show these concepts intuitively instead of relying on memorization. I planned on using this content for a website but then I decided to make an interactive version instead.
 
-*Technologies Used: Ruby on Rails*
+Recommended Usage: python generate_fretboard.py
+
+*Technologies Used: Python*
 
 ---
 
